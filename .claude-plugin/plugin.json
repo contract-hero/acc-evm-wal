@@ -1,0 +1,26 @@
+{
+  "name": "acc-evm-wal",
+  "version": "0.1.0",
+  "description": "ACC content plugin teaching the basics of Walrus decentralized storage and how to integrate it with Solidity smart contracts.",
+  "author": {
+    "name": "Alvaro Lillo"
+  },
+  "keywords": ["walrus", "solidity", "evm", "storage", "smart-contracts", "sui", "course"],
+  "commands": ["./commands/start.md"],
+  "accContent": {
+    "lessons": "./lessons/",
+    "probes": [
+      {
+        "id": "foundry-installed",
+        "kind": "shell-exit-zero",
+        "message_pass": "Foundry (forge) is installed and on PATH.",
+        "message_fail": "Foundry not found on PATH. Install it from https://getfoundry.sh or run: curl -L https://foundry.paradigm.xyz | bash && foundryup",
+        "params": {
+          "command": "forge",
+          "args": ["--version"],
+          "timeout_ms": 10000
+        }
+      }
+    ]
+  }
+}

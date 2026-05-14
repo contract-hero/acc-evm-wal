@@ -1,0 +1,21 @@
+{
+  "ran_at": "2026-05-14T00:00:00Z",
+  "validation_skipped": true,
+  "reason": "Step 7 (skill-runner sub-agent dispatch under both 'learning' and 'explanatory' output styles) was deferred — running dispatched subagents inside a background session is unreliable, and the lesson stack here (Foundry/Solidity + forge test) doesn't fit the skill's default JS/Vitest validation harness. The reference implementation in reference-app/ was, however, exercised against `forge test` during authoring and the four-test suite passes; what remains is to confirm both output styles still produce code that passes the gate.",
+  "reference_gate_run": {
+    "ran_at": "2026-05-14T00:00:00Z",
+    "command": "forge test",
+    "cwd": "reference-app",
+    "exit_code": 0,
+    "tests_passed": 4,
+    "tests_failed": 0,
+    "transcript_excerpt": "Ran 4 tests for test/WalrusAnchor.t.sol:WalrusAnchorTest\n[PASS] test_anchor_emitsEvent() (gas: 33540)\n[PASS] test_anchor_overwritesPrevious() (gas: 32451)\n[PASS] test_anchor_storesBlobIdForCaller() (gas: 32933)\n[PASS] test_blobOf_returnsZeroForUnknown() (gas: 7633)\nSuite result: ok. 4 passed; 0 failed; 0 skipped"
+  },
+  "follow_up_checklist": [
+    "Push acc-evm-wal to a remote and add it to a Claude Code marketplace.",
+    "Enable both agentic-community-college and acc-evm-wal plugins, then run /agentic-community-college:start from a temp projectRoot.",
+    "Pick the slug 'acc-evm-wal@<marketplace>/01-walrus-solidity-basics' and pass through under output style 'learning'; confirm `forge test` in the workspace passes 4/4.",
+    "Repeat under output style 'explanatory'; confirm 4/4 again.",
+    "Replace this validation.json with a real run record: { ran_at, learning: { exit_code, tests_passed, transcript_excerpt }, explanatory: { ... } }."
+  ]
+}
