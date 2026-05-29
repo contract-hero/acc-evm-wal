@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "sections": [
+    {
+      "id": "s01-anchor-state",
+      "title": "Anchor state — the on-chain footprint",
+      "body_md": "sections/01-anchor-state.md",
+      "key_moment": "Picking `bytes32` for the blob ID. Walrus blob IDs are exactly 32 bytes (a BLAKE2b-256 hash of the content), so they slot into a single storage word — one SSTORE per anchor regardless of underlying blob size. Using `string` or `bytes` would double the cost and break the constant-gas property.",
+      "expected_files": ["src/WalrusAnchor.sol"],
+      "artifact_section_id": "s01-anchor-state"
+    },
+    {
+      "id": "s02-anchor-write",
+      "title": "The write path — `anchor(bytes32 blobId)`",
+      "body_md": "sections/02-anchor-write.md",
+      "key_moment": "Using `msg.sender` as the mapping key (rather than taking an `address owner` parameter). This makes the on-chain authentication implicit — the EVM has already proven who the caller is by the time we reach this line, so we don't need any explicit `require(msg.sender == owner)` check.",
+      "expected_files": ["src/WalrusAnchor.sol"],
+      "artifact_section_id": "s02-anchor-write"
+    },
+    {
+      "id": "s03-anchor-read",
+      "title": "The read path — `blobOf(address)` and the equivalence gate",
+      "body_md": "sections/03-anchor-read.md",
+      "key_moment": "The read path is a plain mapping lookup with no decoding, no aggregation, and no events — the off-chain client uses the returned `bytes32` to build a URL like `https://aggregator.walrus-testnet.walrus.space/v1/blobs/<blobId-as-base64url>` and fetches the actual content from there. The contract's job ends at returning the pointer.",
+      "expected_files": ["src/WalrusAnchor.sol"],
+      "artifact_section_id": "s03-anchor-read"
+    }
+  ],
+  "final_verification": {
+    "mode": "test-suite",
+    "command": "forge test"
+  }
+}

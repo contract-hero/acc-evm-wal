@@ -1,0 +1,26 @@
+# Node / pnpm
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+.vite/
+build/
+
+# ACC runtime state
+.acc/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor scratch
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Foundry artifacts (in case a lesson scaffolds a Foundry project under lessons/)
+cache/
+out/
+broadcast/

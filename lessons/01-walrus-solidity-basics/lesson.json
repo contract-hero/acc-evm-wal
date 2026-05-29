@@ -1,0 +1,19 @@
+{
+  "slug": "01-walrus-solidity-basics",
+  "title": "Walrus + Solidity Basics — Anchoring Blob IDs On-Chain",
+  "summary": "Write a Solidity contract that anchors a Walrus blob ID per EVM address, then verify it with Foundry tests. Off-chain clients use the contract as an EVM-native lookup table for Walrus-hosted content.",
+  "personalization_options": [],
+  "build_command": "forge build",
+  "test_command": "forge test",
+  "prerequisites": ["foundry-installed"],
+  "workspace": {
+    "host": "reference-app",
+    "host_install_command": "forge build",
+    "verification_cwd": ".",
+    "files": []
+  },
+  "artifact": {
+    "template": "artifact/template.html",
+    "state_filename": "artifact-state.json"
+  }
+}
