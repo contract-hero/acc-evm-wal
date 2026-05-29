@@ -1,0 +1,12 @@
+[profile.default]
+src = "src"
+out = "out"
+test = "test"
+libs = ["lib"]
+solc_version = "0.8.24"
+optimizer = true
+optimizer_runs = 200
+
+# Forge-std-free + OpenZeppelin-free so the workspace runs offline. The
+# contract inlines a minimal IERC20 surface area, and the test inlines a
+# Foundry cheatcode interface — see test/Governance.t.sol.

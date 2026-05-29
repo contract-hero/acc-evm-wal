@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "sections": [
+    {
+      "id": "s01-validate-inputs",
+      "title": "Validating publish inputs",
+      "body_md": "sections/01-validate-inputs.md",
+      "key_moment": "The site-name regex `^[A-Za-z0-9._-]{1,64}$` is a conservative-shell-safety hat. `site-builder` itself accepts almost anything, but the name flows through bash wrappers, CI logs, and (after linking) a SuiNS label — restricting it to filename-safe characters means no entry in the pipeline has to defend against quoting, control chars, or pathological lengths.",
+      "expected_files": ["src/publish.ts"],
+      "artifact_section_id": "s01-validate-inputs"
+    },
+    {
+      "id": "s02-build-argv",
+      "title": "Building the site-builder argv",
+      "body_md": "sections/02-build-argv.md",
+      "key_moment": "`--context <network>` is a GLOBAL flag on `site-builder`, not a subcommand flag — it must precede `publish` in the argv. The function returns the argv as a string array (not a single shell-quoted string) so callers feed it to `execFile` / `spawn`, which sidesteps shell injection on the site name.",
+      "expected_files": ["src/publish.ts"],
+      "artifact_section_id": "s02-build-argv"
+    },
+    {
+      "id": "s03-parse-output",
+      "title": "Parsing site_object_id from stdout",
+      "body_md": "sections/03-parse-output.md",
+      "key_moment": "`site-builder`'s stdout is a human-readable log; the line `site_object_id: 0x<hex>` is what we anchor on. Anchoring on the line shape (with the `m` regex flag) rather than greedy text matching keeps the parser tolerant to upstream log changes — a future CLI version can rearrange the surrounding text without breaking us as long as that one line shape survives.",
+      "expected_files": ["src/publish.ts"],
+      "artifact_section_id": "s03-parse-output"
+    },
+    {
+      "id": "s04-suins-link-args",
+      "title": "Building the SuiNS link Move call",
+      "body_md": "sections/04-suins-link-args.md",
+      "key_moment": "The link is one Sui Move call to `<suins-pkg>::controller::set_target_walrus_site`, taking the NameRegistration object id and the site object id (in that order). Returning the payload as data — `{ target, args }` — instead of a built `Transaction` lets the test assert on PTB shape without pulling in `@mysten/sui`, and lets the caller pick either `Transaction.moveCall(...)` or `sui client call`.",
+      "expected_files": ["src/suins-link.ts"],
+      "artifact_section_id": "s04-suins-link-args"
+    }
+  ],
+  "final_verification": {
+    "mode": "test-suite",
+    "command": "pnpm vitest run"
+  }
+}

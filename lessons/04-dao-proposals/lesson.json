@@ -1,0 +1,19 @@
+{
+  "slug": "04-dao-proposals",
+  "title": "DAO Proposals — Walrus-Backed Bodies, On-Chain Tallies",
+  "summary": "Build a Governance contract whose on-chain state is just (proposer, blobId, deadline, yes, no) per proposal. The proposer pays Walrus for the body upfront; voters read the body from the public aggregator and cast a token-weighted yes/no. Includes the flash-loan-vulnerability warning that separates the showcase shape from a production-safe pattern.",
+  "personalization_options": [],
+  "build_command": "forge build",
+  "test_command": "forge test",
+  "prerequisites": ["foundry-installed"],
+  "workspace": {
+    "host": "reference-app",
+    "host_install_command": "forge build",
+    "verification_cwd": ".",
+    "files": []
+  },
+  "artifact": {
+    "template": "artifact/template.html",
+    "state_filename": "artifact-state.json"
+  }
+}

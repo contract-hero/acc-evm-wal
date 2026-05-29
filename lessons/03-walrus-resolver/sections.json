@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "sections": [
+    {
+      "id": "s01-storage-and-auth",
+      "title": "Storage + the ENS-piggybacked auth gate",
+      "body_md": "sections/01-storage-and-auth.md",
+      "key_moment": "The `_requireAuthorized(node)` helper consults the EXTERNAL ENS registry — `ens.owner(node)` and `ens.isApprovedForAll(...)`. That single line inherits ENSIP-1's authorization model in its entirety: if the .eth name ever transfers, the new owner is automatically the authority here too, with no separate claim step on this contract. Replicating ENS's access list on-chain would have been wrong both for gas and for staying in sync.",
+      "expected_files": ["src/WalrusResolver.sol"],
+      "artifact_section_id": "s01-storage-and-auth"
+    },
+    {
+      "id": "s02-write-path",
+      "title": "The write path — `setWalrusBlob`",
+      "body_md": "sections/02-write-path.md",
+      "key_moment": "Authorization is the FIRST line of `setWalrusBlob`. Every external mutator (`setWalrusBlob`, `clearWalrusBlob`) calls `_requireAuthorized(node)` before touching storage. Centralising the check in an internal function — instead of inlining the require — means a future mutator that forgets to call it stands out in a diff. The pattern is a 'guard rail by convention', not by language feature, but it's the cheapest way to make missing auth visible at code-review time.",
+      "expected_files": ["src/WalrusResolver.sol"],
+      "artifact_section_id": "s02-write-path"
+    },
+    {
+      "id": "s03-clear-path",
+      "title": "The clear path — `clearWalrusBlob`",
+      "body_md": "sections/03-clear-path.md",
+      "key_moment": "`delete _pointers[node]` + an explicit zero-valued event, instead of a self-call to `setWalrusBlob(node, 0, 0, 0)`. The self-call would re-run the auth gate (cheap but redundant) and would emit a 'change' event that semantically reads 'set to zero' rather than 'cleared'. Indexers that surface history care about the difference: a deliberate clear is a different user intent from accidentally zeroing the slot.",
+      "expected_files": ["src/WalrusResolver.sol"],
+      "artifact_section_id": "s03-clear-path"
+    },
+    {
+      "id": "s04-read-and-erc165",
+      "title": "The read path + ERC-165 declaration",
+      "body_md": "sections/04-read-and-erc165.md",
+      "key_moment": "`supportsInterface` claims ONLY `type(IERC165).interfaceId` — explicitly NOT the ENS resolver interface ids (`0x3b3b57de` for `addr`, `0xbc1c58d1` for `contenthash`, etc). Advertising those would create a category confusion: a client that auto-detects 'is this an ENS resolver?' would assume `addr()` and `contenthash()` exist and start staticcalling functions that aren't here. The detection pattern for this contract is a direct staticcall to `walrusBlob(bytes32)`, not an ERC-165 round-trip.",
+      "expected_files": ["src/WalrusResolver.sol"],
+      "artifact_section_id": "s04-read-and-erc165"
+    }
+  ],
+  "final_verification": {
+    "mode": "test-suite",
+    "command": "forge test"
+  }
+}

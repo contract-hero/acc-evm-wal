@@ -20,6 +20,17 @@
           "args": ["--version"],
           "timeout_ms": 10000
         }
+      },
+      {
+        "id": "pnpm-installed",
+        "kind": "shell-exit-zero",
+        "message_pass": "pnpm is installed and on PATH.",
+        "message_fail": "pnpm not found on PATH. Install Node 22+ from https://nodejs.org and then: npm install -g pnpm  (or: corepack enable && corepack prepare pnpm@latest --activate)",
+        "params": {
+          "command": "pnpm",
+          "args": ["--version"],
+          "timeout_ms": 10000
+        }
       }
     ]
   }

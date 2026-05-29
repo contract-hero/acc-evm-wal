@@ -1,0 +1,16 @@
+{
+  "ran_at": "2026-05-29T09:45:00Z",
+  "learning": {
+    "exit_code": 0,
+    "tests_passed": 12,
+    "duration_ms": 6,
+    "transcript_excerpt": "Compiling 2 files with Solc 0.8.24\n  Solc 0.8.24 finished in 157.45ms\n  Compiler run successful!\n  Ran 12 tests for test/Governance.t.sol:GovernanceTest\n  [PASS] test_propose_revertsOnPastDeadline (gas: 10976)\n  [PASS] test_propose_revertsOnZeroBlob (gas: 8961)\n  [PASS] test_propose_secondCall_assignsSequentialIdAndIndependentStorage (gas: 221155)\n  [PASS] test_propose_storesProposalAndEmits (gas: 108668)\n  [PASS] test_tally_closedAndFailed_whenNoExceedsYes (gas: 192316)\n  [PASS] test_tally_closedAndPassed_whenYesExceedsNo (gas: 140541)\n  [PASS] test_tally_openProposal_isNotClosedNotPassed (gas: 191939)\n  [PASS] test_tally_revertsOnUnknownProposal (gas: 11301)\n  [PASS] test_vote_addsWeightedTally (gas: 223661)\n  [PASS] test_vote_revertsAfterDeadline (gas: 108430)\n  [PASS] test_vote_revertsOnDoubleVote (gas: 140752)\n  [PASS] test_vote_revertsOnZeroWeight (gas: 113573)\n  Suite result: ok. 12 passed; 0 failed; 0 skipped",
+    "subagent_findings": [
+      "Teachable as written; no required rewordings. Optional polish: a sentence noting forge's lint warnings on block.timestamp + uint128 casts are expected (warnings, not errors)."
+    ]
+  },
+  "explanatory": {
+    "skipped": true,
+    "reason": "Output-style toggling can't be driven from a child subagent dispatch."
+  }
+}

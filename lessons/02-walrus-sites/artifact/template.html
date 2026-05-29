@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Walrus Sites — ACC artifact</title>
+<style>
+  :root {
+    --bg: #0e1117;
+    --panel: #161b22;
+    --panel-2: #1f242d;
+    --border: #2a313c;
+    --fg: #d5d9e0;
+    --muted: #8b94a7;
+    --accent: #79b8ff;
+    --accent-2: #7ad9bf;
+    --good: #6dd56d;
+    --warn: #e6c07b;
+    --bad: #e08585;
+    --code-bg: #0b0e13;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    background: var(--bg);
+    color: var(--fg);
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  body { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+  h1 { font-size: 1.6rem; margin: 0 0 .25rem; }
+  h2 { font-size: 1.15rem; margin: 2rem 0 .6rem; padding-bottom: .3rem; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 1.0rem; margin: 1.2rem 0 .4rem; color: var(--accent-2); }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; color: #f0f3f7; }
+  pre { background: var(--code-bg); padding: .9rem 1rem; border-radius: 6px; overflow-x: auto; line-height: 1.45; }
+  pre code { background: transparent; padding: 0; }
+  .lede { color: var(--muted); }
+  section.acc-section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity .4s ease, transform .4s ease;
+    pointer-events: none;
+    height: 0;
+    overflow: hidden;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin: 0;
+  }
+  section.acc-section[data-visible="true"] {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    height: auto;
+    padding: 1.2rem 1.4rem;
+    margin: 1rem 0;
+  }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; background: var(--panel-2); color: var(--accent); margin-right: .5rem; }
+  .meta { color: var(--muted); font-size: 0.85rem; margin-top: .5rem; }
+  .grid { display: grid; gap: .8rem; grid-template-columns: 1fr 1fr; }
+  .grid > div { background: var(--panel-2); border: 1px solid var(--border); border-radius: 6px; padding: .8rem 1rem; }
+  .grid h4 { margin: 0 0 .4rem; font-size: .9rem; color: var(--accent); }
+  svg { max-width: 100%; height: auto; display: block; margin: .6rem 0; }
+  .legend { font-size: .8rem; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<h1>Walrus Sites — Publishing Frontends as Sui Objects</h1>
+<p class="lede" id="acc-progress">Lesson loading…</p>
+
+<!-- ============================================================ -->
+<!-- Section 1: validating inputs                                  -->
+<!-- ============================================================ -->
+<section class="acc-section" data-section-id="s01-validate-inputs">
+  <h2><span class="badge">Section 1</span> Validating publish inputs</h2>
+
+  <p>The four functions you're about to write form a pipeline from loose user inputs to an argv-array the CLI consumes. This first one is the gate.</p>
+
+  <svg viewBox="0 0 700 220" role="img" aria-label="validatePublishOpts gate">
+    <defs>
+      <marker id="arr1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#8b94a7" />
+      </marker>
+      <marker id="arr1-bad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#e08585" />
+      </marker>
+    </defs>
+    <rect x="20" y="40" width="200" height="140" rx="8" fill="#1f242d" stroke="#2a313c" />
+    <text x="120" y="62" text-anchor="middle" fill="#79b8ff" font-size="12" font-weight="600">PublishOpts (loose)</text>
+    <text x="120" y="86" text-anchor="middle" fill="#d5d9e0" font-size="11">siteDir: string</text>
+    <text x="120" y="106" text-anchor="middle" fill="#d5d9e0" font-size="11">siteName: string</text>
+    <text x="120" y="126" text-anchor="middle" fill="#8b94a7" font-size="11">epochs?: number</text>
+    <text x="120" y="146" text-anchor="middle" fill="#8b94a7" font-size="11">network?: Network</text>
+
+    <rect x="280" y="55" width="160" height="110" rx="8" fill="#1f242d" stroke="#e6c07b" />
+    <text x="360" y="80" text-anchor="middle" fill="#e6c07b" font-size="12" font-weight="600">validatePublishOpts</text>
+    <text x="360" y="104" text-anchor="middle" fill="#d5d9e0" font-size="10">regex check</text>
+    <text x="360" y="122" text-anchor="middle" fill="#d5d9e0" font-size="10">default fill</text>
+    <text x="360" y="140" text-anchor="middle" fill="#d5d9e0" font-size="10">throw on bad</text>
+
+    <rect x="500" y="40" width="180" height="100" rx="8" fill="#1f242d" stroke="#6dd56d" />
+    <text x="590" y="62" text-anchor="middle" fill="#6dd56d" font-size="12" font-weight="600">ValidatedPublishOpts</text>
+    <text x="590" y="86" text-anchor="middle" fill="#d5d9e0" font-size="11">epochs: 53 (default/max)</text>
+    <text x="590" y="106" text-anchor="middle" fill="#d5d9e0" font-size="11">network: "testnet"</text>
+    <text x="590" y="126" text-anchor="middle" fill="#8b94a7" font-size="10">— fully typed, no nulls</text>
+
+    <line x1="220" y1="110" x2="278" y2="110" stroke="#79b8ff" stroke-width="2" marker-end="url(#arr1)" />
+    <line x1="440" y1="100" x2="498" y2="90" stroke="#79b8ff" stroke-width="2" marker-end="url(#arr1)" />
+
+    <text x="360" y="190" text-anchor="middle" fill="#e08585" font-size="11">"my site" ✗  "a".repeat(65) ✗  network: "devnet" ✗</text>
+    <text x="360" y="208" text-anchor="middle" fill="#8b94a7" font-size="10">— each invalid field throws a descriptive Error</text>
+  </svg>
+
+  <h3>The site-name regex</h3>
+  <pre><code>const SITE_NAME_PATTERN = /^[A-Za-z0-9._-]{1,64}$/;</code></pre>
+  <p>Filename-safe characters only, length capped at 64. The constraint isn't from <code>site-builder</code> — it's a hygiene contract for every stage downstream: shell logs, Sui object names, SuiNS labels.</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- Section 2: building the argv                                  -->
+<!-- ============================================================ -->
+<section class="acc-section" data-section-id="s02-build-argv">
+  <h2><span class="badge">Section 2</span> Building the site-builder argv</h2>
+
+  <p>Validated opts in, eight-element argv out. The order is the lesson.</p>
+
+  <svg viewBox="0 0 700 260" role="img" aria-label="site-builder argv layout">
+    <rect x="20" y="20" width="660" height="80" rx="8" fill="#1f242d" stroke="#2a313c" />
+    <text x="350" y="44" text-anchor="middle" fill="#79b8ff" font-size="13" font-weight="600">site-builder argv</text>
+    <text x="350" y="68" text-anchor="middle" fill="#d5d9e0" font-size="12" font-family="ui-monospace, monospace">
+      [ "--context", "testnet", "publish", "./out", "--epochs", "53", "--site-name", "demo" ]
+    </text>
+    <text x="350" y="88" text-anchor="middle" fill="#8b94a7" font-size="10">— passed to execFile / spawn as an ARRAY, never re-shelled</text>
+
+    <rect x="40" y="130" width="180" height="100" rx="8" fill="#1f242d" stroke="#e6c07b" />
+    <text x="130" y="156" text-anchor="middle" fill="#e6c07b" font-size="12" font-weight="600">global flags</text>
+    <text x="130" y="178" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">--context &lt;net&gt;</text>
+    <text x="130" y="198" text-anchor="middle" fill="#8b94a7" font-size="10">MUST precede</text>
+    <text x="130" y="214" text-anchor="middle" fill="#8b94a7" font-size="10">the subcommand</text>
+
+    <rect x="260" y="130" width="180" height="100" rx="8" fill="#1f242d" stroke="#79b8ff" />
+    <text x="350" y="156" text-anchor="middle" fill="#79b8ff" font-size="12" font-weight="600">subcommand</text>
+    <text x="350" y="180" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">publish &lt;siteDir&gt;</text>
+    <text x="350" y="208" text-anchor="middle" fill="#8b94a7" font-size="10">the action verb</text>
+
+    <rect x="480" y="130" width="180" height="100" rx="8" fill="#1f242d" stroke="#6dd56d" />
+    <text x="570" y="156" text-anchor="middle" fill="#6dd56d" font-size="12" font-weight="600">subcommand flags</text>
+    <text x="570" y="178" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">--epochs &lt;n&gt;</text>
+    <text x="570" y="198" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">--site-name &lt;s&gt;</text>
+    <text x="570" y="216" text-anchor="middle" fill="#8b94a7" font-size="10">after the subcommand</text>
+  </svg>
+
+  <p class="legend">If you put <code>--context</code> AFTER <code>publish</code>, the CLI parser treats it as a subcommand flag and bails out. This is the single most common mistake when wrapping <code>site-builder</code>.</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- Section 3: parsing site_object_id                             -->
+<!-- ============================================================ -->
+<section class="acc-section" data-section-id="s03-parse-output">
+  <h2><span class="badge">Section 3</span> Parsing site_object_id from stdout</h2>
+
+  <p>The CLI run finishes. You hold a string of stdout. The handle you need is on one specific line.</p>
+
+  <svg viewBox="0 0 700 280" role="img" aria-label="parseSiteObjectId line-anchored extraction">
+    <rect x="20" y="20" width="430" height="240" rx="8" fill="#0b0e13" stroke="#2a313c" />
+    <text x="40" y="44" fill="#8b94a7" font-size="11" font-family="ui-monospace, monospace">parsing site-builder configuration…</text>
+    <text x="40" y="62" fill="#8b94a7" font-size="11" font-family="ui-monospace, monospace">context: testnet</text>
+    <text x="40" y="80" fill="#8b94a7" font-size="11" font-family="ui-monospace, monospace">walrus aggregator: …</text>
+    <text x="40" y="98" fill="#8b94a7" font-size="11" font-family="ui-monospace, monospace">reading site directory: ./example-site</text>
+    <text x="40" y="116" fill="#8b94a7" font-size="11" font-family="ui-monospace, monospace">encoding 1 resource(s)…</text>
+    <text x="40" y="134" fill="#8b94a7" font-size="11" font-family="ui-monospace, monospace">  index.html (842 bytes) -&gt; blob 0xd1…</text>
+    <text x="40" y="152" fill="#8b94a7" font-size="11" font-family="ui-monospace, monospace">publishing 1 new resource(s) for 53 epoch(s)…</text>
+    <text x="40" y="170" fill="#8b94a7" font-size="11" font-family="ui-monospace, monospace">done. site is published.</text>
+
+    <rect x="30" y="184" width="410" height="22" rx="3" fill="#1f242d" stroke="#7ad9bf" />
+    <text x="40" y="201" fill="#7ad9bf" font-size="11" font-family="ui-monospace, monospace">site_object_id: 0xa1b2c3d4…</text>
+
+    <text x="40" y="226" fill="#8b94a7" font-size="11" font-family="ui-monospace, monospace">next: link this id to a SuiNS name…</text>
+
+    <rect x="490" y="50" width="190" height="160" rx="8" fill="#1f242d" stroke="#79b8ff" />
+    <text x="585" y="76" text-anchor="middle" fill="#79b8ff" font-size="12" font-weight="600">SITE_OBJECT_ID_PATTERN</text>
+    <text x="585" y="100" text-anchor="middle" fill="#d5d9e0" font-size="10" font-family="ui-monospace, monospace">/^\s*site_object_id:</text>
+    <text x="585" y="116" text-anchor="middle" fill="#d5d9e0" font-size="10" font-family="ui-monospace, monospace">\s*(0x[a-fA-F0-9]+)\s*$/</text>
+    <text x="585" y="138" text-anchor="middle" fill="#e6c07b" font-size="11" font-weight="600">m flag</text>
+    <text x="585" y="156" text-anchor="middle" fill="#8b94a7" font-size="10">anchors ^ and $</text>
+    <text x="585" y="172" text-anchor="middle" fill="#8b94a7" font-size="10">to line boundaries</text>
+    <text x="585" y="194" text-anchor="middle" fill="#6dd56d" font-size="11">→ 0xa1b2c3d4… (lower)</text>
+  </svg>
+
+  <p class="legend">Line-anchored regex with the <code>m</code> flag tolerates upstream log drift: timestamps, color codes, reflows. The only invariant is that one line still matches <code>site_object_id: 0x&lt;hex&gt;</code>.</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- Section 4: SuiNS link Move call                               -->
+<!-- ============================================================ -->
+<section class="acc-section" data-section-id="s04-suins-link-args">
+  <h2><span class="badge">Section 4</span> Building the SuiNS link Move call</h2>
+
+  <p>You have a site object id. To make it browsable as <code>&lt;name&gt;.wal.app</code>, one Sui Move call connects it to a SuiNS <code>NameRegistration</code>.</p>
+
+  <svg viewBox="0 0 700 280" role="img" aria-label="SuiNS link Move call shape">
+    <rect x="20" y="30" width="200" height="120" rx="8" fill="#1f242d" stroke="#2a313c" />
+    <text x="120" y="56" text-anchor="middle" fill="#79b8ff" font-size="12" font-weight="600">buildSetWalrusSiteCall</text>
+    <text x="120" y="80" text-anchor="middle" fill="#d5d9e0" font-size="10">network: "testnet"</text>
+    <text x="120" y="96" text-anchor="middle" fill="#d5d9e0" font-size="10">nameRegistrationObjectId</text>
+    <text x="120" y="112" text-anchor="middle" fill="#d5d9e0" font-size="10">siteObjectId</text>
+    <text x="120" y="138" text-anchor="middle" fill="#8b94a7" font-size="10">(also: optional pkg override)</text>
+
+    <rect x="280" y="30" width="380" height="120" rx="8" fill="#1f242d" stroke="#7ad9bf" />
+    <text x="470" y="56" text-anchor="middle" fill="#7ad9bf" font-size="12" font-weight="600">MoveCallPayload</text>
+    <text x="470" y="84" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">target: "&lt;suins-pkg&gt;::controller::set_target_walrus_site"</text>
+    <text x="470" y="108" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">args: [ &lt;name-reg&gt;, &lt;site&gt; ]</text>
+    <text x="470" y="134" text-anchor="middle" fill="#8b94a7" font-size="10">— plain object; no Transaction builder</text>
+
+    <line x1="220" y1="90" x2="278" y2="90" stroke="#79b8ff" stroke-width="2" />
+    <polygon points="278,90 270,86 270,94" fill="#79b8ff" />
+
+    <rect x="40" y="180" width="280" height="80" rx="8" fill="#1f242d" stroke="#79b8ff" />
+    <text x="180" y="206" text-anchor="middle" fill="#79b8ff" font-size="12" font-weight="600">programmatic caller</text>
+    <text x="180" y="230" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">tx.moveCall(payload)</text>
+    <text x="180" y="248" text-anchor="middle" fill="#8b94a7" font-size="10">@mysten/sui/transactions</text>
+
+    <rect x="360" y="180" width="300" height="80" rx="8" fill="#1f242d" stroke="#e6c07b" />
+    <text x="510" y="206" text-anchor="middle" fill="#e6c07b" font-size="12" font-weight="600">operator caller</text>
+    <text x="510" y="230" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">sui client call --function …</text>
+    <text x="510" y="248" text-anchor="middle" fill="#8b94a7" font-size="10">(same target + args, pasted)</text>
+  </svg>
+
+  <h3>The equivalence gate</h3>
+  <svg viewBox="0 0 700 100" role="img" aria-label="vitest gate">
+    <rect x="20" y="20" width="660" height="60" rx="8" fill="#1f242d" stroke="#6dd56d" />
+    <text x="350" y="46" text-anchor="middle" fill="#6dd56d" font-size="13" font-weight="600">pnpm vitest run — 22 tests across 2 suites</text>
+    <text x="350" y="68" text-anchor="middle" fill="#d5d9e0" font-size="11">publish.test.ts (15) · suins-link.test.ts (7)</text>
+  </svg>
+  <p class="legend">When the vitest gate goes green, your publisher is behaviorally equivalent to the reference, regardless of which syntactic style you used.</p>
+</section>
+
+<!-- ACC_STATE -->
+
+<script>
+  // Apply the inlined `window.__ACC_STATE__` if present (injected by
+  // advanceArtifact at write time). This is the load-bearing render path
+  // because browsers block `fetch` of local JSON when the page is opened
+  // via `file://`. The optional poller below re-reads the same JSON if
+  // it can — useful when the artifact is served over http://.
+  function applyAccState(s) {
+    if (!s) return;
+    const revealed = new Set(s.revealed || []);
+    for (const sec of document.querySelectorAll('section.acc-section')) {
+      const id = sec.getAttribute('data-section-id');
+      sec.setAttribute('data-visible', revealed.has(id) ? 'true' : 'false');
+    }
+    const cur = (typeof s.cursor === 'number') ? s.cursor + 1 : 0;
+    const total = s.total_sections ?? 0;
+    const mode = s.mode ?? '?';
+    const progress = document.getElementById('acc-progress');
+    if (progress) progress.textContent = 'Section ' + cur + ' of ' + total + ' · output mode: ' + mode;
+  }
+  applyAccState(window.__ACC_STATE__);
+
+  (async function poll() {
+    let lastUpdate = window.__ACC_STATE__?.updated_at ?? '';
+    while (true) {
+      try {
+        const r = await fetch('./artifact-state.json?_=' + Date.now(), { cache: 'no-store' });
+        if (r.ok) {
+          const s = await r.json();
+          if (s.updated_at !== lastUpdate) {
+            lastUpdate = s.updated_at;
+            applyAccState(s);
+          }
+        }
+      } catch (e) {
+        /* swallow — fetch may be blocked on file://, and that's fine: the
+           inlined state has already set up the initial render. The learner
+           refreshes the page between sections to pick up new state. */
+      }
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+  })();
+</script>
+
+</body>
+</html>

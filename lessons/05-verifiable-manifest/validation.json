@@ -1,0 +1,19 @@
+{
+  "ran_at": "2026-05-29T09:54:11Z",
+  "learning": {
+    "exit_code": 0,
+    "test_files_passed": 2,
+    "tests_passed": 15,
+    "duration_ms": 662,
+    "transcript_excerpt": "RUN v2.1.9 /private/tmp/acc-validation-05-verifiable-manifest\n  ✓ tests/encoding.test.ts (7 tests) 2ms\n  ✓ tests/manifest.test.ts (8 tests) 7ms\n  Test Files  2 passed (2)\n        Tests  15 passed (15)\n     Start at  09:54:11\n     Duration  662ms\n  EXIT_CODE=0",
+    "subagent_findings": [
+      "description.md said 'six tests' for encoding — actually seven. Fixed.",
+      "Section 2 only described the WALRUS_RESOLVER_ABI in prose; the subagent flagged this as the one non-mechanical step. Fixed by adding the full ABI literal verbatim.",
+      "Section 1's nested template-literal backticks rendered awkwardly. Rewritten as natural prose."
+    ]
+  },
+  "explanatory": {
+    "skipped": true,
+    "reason": "Output-style toggling can't be driven from a child subagent dispatch."
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "ran_at": "2026-05-29T22:38:32Z",
+  "learning": {
+    "exit_code": 0,
+    "test_files_passed": 2,
+    "tests_passed": 23,
+    "duration_ms": 570,
+    "transcript_excerpt": "RUN v2.1.9 /.../lessons/02-walrus-sites/reference-app\n  ✓ tests/suins-link.test.ts (7 tests) 4ms\n  ✓ tests/publish.test.ts (16 tests) 4ms\n  Test Files  2 passed (2)\n        Tests  23 passed (23)\n     Start at  22:38:32\n     Duration  570ms\n  EXIT: 0",
+    "subagent_findings": [
+      "Section 4 originally asked for testnet+mainnet SuiNS pkg ids but only pinned mainnet — forced one peek. Fixed by listing both ids inline.",
+      "Section 1 didn't warn that tests/publish.test.ts imports all 3 exports; without throwing stubs the file won't load. Fixed by adding an explicit stub note.",
+      "Section 4 said 'open src/suins-link.ts' — file doesn't exist in the stripped workspace. Reworded to 'create src/suins-link.ts'.",
+      "PR-review fix: the epochs default was 200, which exceeds the Walrus per-store maximum of 53 epochs (a runtime failure for any learner). Changed the default to 53, added a MAX_EPOCHS=53 cap check, and added a 'rejects epochs over the Walrus maximum' test. Artifact/fixture epoch values updated to 53. Also added a wal.app-is-mainnet-only note. Re-ran: 23/23."
+    ]
+  },
+  "explanatory": {
+    "skipped": true,
+    "reason": "Output-style toggling can't be driven from a child subagent dispatch; the parent session's output style is what skill-runner inherits. The lesson's section bodies are mode-agnostic (no 'explain in detail' vs 'fill in a TODO' divergence in the prompts), so the explanatory pass would exercise the same code paths."
+  }
+}

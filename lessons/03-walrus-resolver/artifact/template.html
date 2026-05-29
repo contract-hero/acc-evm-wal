@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>WalrusResolver — ACC artifact</title>
+<style>
+  :root {
+    --bg: #0e1117;
+    --panel: #161b22;
+    --panel-2: #1f242d;
+    --border: #2a313c;
+    --fg: #d5d9e0;
+    --muted: #8b94a7;
+    --accent: #79b8ff;
+    --accent-2: #7ad9bf;
+    --good: #6dd56d;
+    --warn: #e6c07b;
+    --bad: #e08585;
+    --code-bg: #0b0e13;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    background: var(--bg);
+    color: var(--fg);
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  body { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+  h1 { font-size: 1.6rem; margin: 0 0 .25rem; }
+  h2 { font-size: 1.15rem; margin: 2rem 0 .6rem; padding-bottom: .3rem; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 1.0rem; margin: 1.2rem 0 .4rem; color: var(--accent-2); }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; color: #f0f3f7; }
+  pre { background: var(--code-bg); padding: .9rem 1rem; border-radius: 6px; overflow-x: auto; line-height: 1.45; }
+  pre code { background: transparent; padding: 0; }
+  .lede { color: var(--muted); }
+  section.acc-section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity .4s ease, transform .4s ease;
+    pointer-events: none;
+    height: 0;
+    overflow: hidden;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin: 0;
+  }
+  section.acc-section[data-visible="true"] {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    height: auto;
+    padding: 1.2rem 1.4rem;
+    margin: 1rem 0;
+  }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; background: var(--panel-2); color: var(--accent); margin-right: .5rem; }
+  .meta { color: var(--muted); font-size: 0.85rem; margin-top: .5rem; }
+  table.intf { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  table.intf td, table.intf th { padding: .35rem .6rem; border-bottom: 1px solid var(--border); text-align: left; }
+  table.intf th { color: var(--muted); font-weight: 500; }
+  table.intf code { font-size: .85rem; }
+  .ok { color: var(--good); font-weight: 600; }
+  .no { color: var(--bad); font-weight: 600; }
+  svg { max-width: 100%; height: auto; display: block; margin: .6rem 0; }
+  .legend { font-size: .8rem; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<h1>WalrusResolver — An IPNS Replacement on ENS</h1>
+<p class="lede" id="acc-progress">Lesson loading…</p>
+
+<!-- ============================================================ -->
+<!-- Section 1: storage + auth gate                                -->
+<!-- ============================================================ -->
+<section class="acc-section" data-section-id="s01-storage-and-auth">
+  <h2><span class="badge">Section 1</span> Storage + the ENS-piggybacked auth gate</h2>
+
+  <p>The contract you're writing has zero local access-control state. Authorization is borrowed live from the ENS registry on every call.</p>
+
+  <svg viewBox="0 0 700 280" role="img" aria-label="ENS-piggybacked authorization">
+    <defs>
+      <marker id="arr3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#8b94a7" />
+      </marker>
+    </defs>
+
+    <rect x="20" y="40" width="200" height="100" rx="8" fill="#1f242d" stroke="#79b8ff" />
+    <text x="120" y="64" text-anchor="middle" fill="#79b8ff" font-size="12" font-weight="600">ENS Registry (external)</text>
+    <text x="120" y="84" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">owner(node)</text>
+    <text x="120" y="102" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">isApprovedForAll(o, op)</text>
+    <text x="120" y="124" text-anchor="middle" fill="#8b94a7" font-size="10">0x0000…2e1e on mainnet</text>
+
+    <rect x="280" y="20" width="200" height="240" rx="8" fill="#1f242d" stroke="#7ad9bf" />
+    <text x="380" y="44" text-anchor="middle" fill="#7ad9bf" font-size="12" font-weight="600">WalrusResolver</text>
+    <text x="380" y="68" text-anchor="middle" fill="#d5d9e0" font-size="10">struct Pointer { blobId, suiObjectId, ct }</text>
+    <text x="380" y="86" text-anchor="middle" fill="#d5d9e0" font-size="10">mapping(node =&gt; Pointer) _pointers</text>
+    <text x="380" y="106" text-anchor="middle" fill="#d5d9e0" font-size="10">IENS immutable ens</text>
+
+    <rect x="300" y="130" width="160" height="100" rx="6" fill="#0b0e13" stroke="#e6c07b" />
+    <text x="380" y="152" text-anchor="middle" fill="#e6c07b" font-size="11" font-weight="600">_requireAuthorized</text>
+    <text x="380" y="172" text-anchor="middle" fill="#d5d9e0" font-size="10" font-family="ui-monospace, monospace">ens.owner(node)</text>
+    <text x="380" y="188" text-anchor="middle" fill="#d5d9e0" font-size="10" font-family="ui-monospace, monospace">|| ens.isApprovedForAll</text>
+    <text x="380" y="206" text-anchor="middle" fill="#8b94a7" font-size="10">— internal view, no state</text>
+    <text x="380" y="222" text-anchor="middle" fill="#8b94a7" font-size="10">  added to this contract</text>
+
+    <line x1="220" y1="90" x2="298" y2="170" stroke="#79b8ff" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#arr3)" />
+    <line x1="298" y1="195" x2="220" y2="115" stroke="#7ad9bf" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#arr3)" />
+
+    <rect x="520" y="60" width="160" height="160" rx="8" fill="#1f242d" stroke="#6dd56d" />
+    <text x="600" y="86" text-anchor="middle" fill="#6dd56d" font-size="12" font-weight="600">authorized?</text>
+    <text x="600" y="112" text-anchor="middle" fill="#d5d9e0" font-size="11">caller == owner</text>
+    <text x="600" y="130" text-anchor="middle" fill="#d5d9e0" font-size="11">OR is approved</text>
+    <text x="600" y="148" text-anchor="middle" fill="#d5d9e0" font-size="11">operator</text>
+    <text x="600" y="176" text-anchor="middle" fill="#e08585" font-size="11">→ revert otherwise</text>
+    <text x="600" y="200" text-anchor="middle" fill="#8b94a7" font-size="10">"WalrusResolver: not authorized"</text>
+
+    <line x1="460" y1="180" x2="518" y2="140" stroke="#79b8ff" stroke-width="2" marker-end="url(#arr3)" />
+  </svg>
+
+  <p class="legend">Two STATICCALLs to the ENS registry per mutation. The contract never stores who the owner is — it always asks.</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- Section 2: write path                                         -->
+<!-- ============================================================ -->
+<section class="acc-section" data-section-id="s02-write-path">
+  <h2><span class="badge">Section 2</span> The write path — <code>setWalrusBlob</code></h2>
+
+  <p>One external function, three statements. The first one is the load-bearing convention.</p>
+
+  <svg viewBox="0 0 700 240" role="img" aria-label="setWalrusBlob flow">
+    <defs>
+      <marker id="arr4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#8b94a7" />
+      </marker>
+    </defs>
+
+    <rect x="20" y="40" width="640" height="60" rx="8" fill="#1f242d" stroke="#79b8ff" />
+    <text x="40" y="64" fill="#79b8ff" font-size="12" font-weight="600">caller (ENS owner or approved operator)</text>
+    <text x="40" y="84" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">setWalrusBlob(node, blobId, suiObjectId, contentType)</text>
+
+    <rect x="20" y="120" width="200" height="100" rx="8" fill="#1f242d" stroke="#e6c07b" />
+    <text x="120" y="146" text-anchor="middle" fill="#e6c07b" font-size="12" font-weight="600">_requireAuthorized(node)</text>
+    <text x="120" y="170" text-anchor="middle" fill="#d5d9e0" font-size="10">FIRST line, every time</text>
+    <text x="120" y="188" text-anchor="middle" fill="#8b94a7" font-size="10">revert if not owner</text>
+    <text x="120" y="204" text-anchor="middle" fill="#8b94a7" font-size="10">or approved operator</text>
+
+    <rect x="240" y="120" width="200" height="100" rx="8" fill="#1f242d" stroke="#79b8ff" />
+    <text x="340" y="146" text-anchor="middle" fill="#79b8ff" font-size="12" font-weight="600">_pointers[node] = Pointer</text>
+    <text x="340" y="170" text-anchor="middle" fill="#d5d9e0" font-size="10">3-slot SSTORE</text>
+    <text x="340" y="188" text-anchor="middle" fill="#8b94a7" font-size="10">~63k gas (cold)</text>
+    <text x="340" y="204" text-anchor="middle" fill="#8b94a7" font-size="10">~6k gas (warm overwrite)</text>
+
+    <rect x="460" y="120" width="200" height="100" rx="8" fill="#1f242d" stroke="#7ad9bf" />
+    <text x="560" y="146" text-anchor="middle" fill="#7ad9bf" font-size="12" font-weight="600">emit WalrusBlobChanged</text>
+    <text x="560" y="170" text-anchor="middle" fill="#d5d9e0" font-size="10">indexed node only</text>
+    <text x="560" y="188" text-anchor="middle" fill="#8b94a7" font-size="10">history reconstructable</text>
+    <text x="560" y="204" text-anchor="middle" fill="#8b94a7" font-size="10">via event replay</text>
+
+    <line x1="220" y1="170" x2="238" y2="170" stroke="#79b8ff" stroke-width="2" marker-end="url(#arr4)" />
+    <line x1="440" y1="170" x2="458" y2="170" stroke="#79b8ff" stroke-width="2" marker-end="url(#arr4)" />
+  </svg>
+
+  <p class="legend">Internal-helper auth is a guard rail by convention, not by language feature — but it makes "did I auth this?" answerable from a one-line glance per function.</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- Section 3: clear path                                         -->
+<!-- ============================================================ -->
+<section class="acc-section" data-section-id="s03-clear-path">
+  <h2><span class="badge">Section 3</span> The clear path — <code>clearWalrusBlob</code></h2>
+
+  <p>Behaviorally the same as zeroing via <code>setWalrusBlob(node, 0, 0, 0)</code>. Semantically — and in event history — different.</p>
+
+  <svg viewBox="0 0 700 240" role="img" aria-label="clearWalrusBlob vs zero-set">
+    <rect x="20" y="30" width="320" height="180" rx="8" fill="#1f242d" stroke="#6dd56d" />
+    <text x="180" y="56" text-anchor="middle" fill="#6dd56d" font-size="12" font-weight="600">clearWalrusBlob(node)</text>
+    <text x="180" y="82" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">_requireAuthorized(node)</text>
+    <text x="180" y="102" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">delete _pointers[node]</text>
+    <text x="180" y="122" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">emit WalrusBlobChanged(0, 0, 0)</text>
+    <text x="180" y="156" text-anchor="middle" fill="#7ad9bf" font-size="11">✓ refund (~15k gas)</text>
+    <text x="180" y="174" text-anchor="middle" fill="#7ad9bf" font-size="11">✓ clear function selector</text>
+    <text x="180" y="192" text-anchor="middle" fill="#7ad9bf" font-size="11">✓ obvious intent in history</text>
+
+    <rect x="360" y="30" width="320" height="180" rx="8" fill="#1f242d" stroke="#e08585" />
+    <text x="520" y="56" text-anchor="middle" fill="#e08585" font-size="12" font-weight="600">setWalrusBlob(node, 0, 0, 0)</text>
+    <text x="520" y="82" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">_requireAuthorized(node)</text>
+    <text x="520" y="102" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">_pointers[node] = Pointer(0,0,0)</text>
+    <text x="520" y="122" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">emit WalrusBlobChanged(0, 0, 0)</text>
+    <text x="520" y="156" text-anchor="middle" fill="#e08585" font-size="11">✗ no refund</text>
+    <text x="520" y="174" text-anchor="middle" fill="#e08585" font-size="11">✗ selector says "set"</text>
+    <text x="520" y="192" text-anchor="middle" fill="#e08585" font-size="11">✗ ambiguous intent</text>
+  </svg>
+
+  <p class="legend">Behaviorally equivalent, semantically distinct. The deliberate-clear-vs-accidental-zero distinction is what wallets and explorers render to the user.</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- Section 4: read + ERC-165                                     -->
+<!-- ============================================================ -->
+<section class="acc-section" data-section-id="s04-read-and-erc165">
+  <h2><span class="badge">Section 4</span> The read path + ERC-165 declaration</h2>
+
+  <p>The view is trivial. The detection declaration is where most ENS-adjacent contracts get it wrong.</p>
+
+  <h3>The detection table</h3>
+  <table class="intf">
+    <thead><tr><th>interfaceId</th><th>what it means</th><th>support?</th><th>why</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>type(IERC165).interfaceId</code></td>
+        <td>ERC-165 itself</td>
+        <td class="ok">true</td>
+        <td>standard self-declaration</td>
+      </tr>
+      <tr>
+        <td><code>0x3b3b57de</code></td>
+        <td>ENS <code>addr(bytes32)</code></td>
+        <td class="no">false</td>
+        <td>this contract has no <code>addr()</code> — claiming would mislead resolver detectors</td>
+      </tr>
+      <tr>
+        <td><code>0xbc1c58d1</code></td>
+        <td>ENS <code>contenthash(bytes32)</code></td>
+        <td class="no">false</td>
+        <td>same — not implemented, false claim breaks consumers</td>
+      </tr>
+      <tr>
+        <td><code>this.walrusBlob.selector</code></td>
+        <td>a function selector</td>
+        <td class="no">false</td>
+        <td>category confusion — selectors aren't interface ids</td>
+      </tr>
+      <tr>
+        <td>everything else</td>
+        <td>—</td>
+        <td class="no">false</td>
+        <td>nothing here implements those</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Detecting WalrusResolver in client code</h3>
+  <pre><code>// Don't:  await resolver.supportsInterface(0xbc1c58d1)   // would lie if we'd added it
+// Do:     await resolver.walrusBlob(node).catch(() => null) // staticcall — true detection</code></pre>
+
+  <h3>The equivalence gate</h3>
+  <svg viewBox="0 0 700 100" role="img" aria-label="forge test gate">
+    <rect x="20" y="20" width="660" height="60" rx="8" fill="#1f242d" stroke="#6dd56d" />
+    <text x="350" y="46" text-anchor="middle" fill="#6dd56d" font-size="13" font-weight="600">forge test — 8 tests across the WalrusResolver suite</text>
+    <text x="350" y="68" text-anchor="middle" fill="#d5d9e0" font-size="11">setWalrusBlob (4) · clearWalrusBlob (2) · walrusBlob (1) · supportsInterface (1)</text>
+  </svg>
+  <p class="legend">When forge test goes green, your resolver's authorization, write/clear/read paths, and ERC-165 declaration are behaviorally equivalent to the reference.</p>
+</section>
+
+<!-- ACC_STATE -->
+
+<script>
+  function applyAccState(s) {
+    if (!s) return;
+    const revealed = new Set(s.revealed || []);
+    for (const sec of document.querySelectorAll('section.acc-section')) {
+      const id = sec.getAttribute('data-section-id');
+      sec.setAttribute('data-visible', revealed.has(id) ? 'true' : 'false');
+    }
+    const cur = (typeof s.cursor === 'number') ? s.cursor + 1 : 0;
+    const total = s.total_sections ?? 0;
+    const mode = s.mode ?? '?';
+    const progress = document.getElementById('acc-progress');
+    if (progress) progress.textContent = 'Section ' + cur + ' of ' + total + ' · output mode: ' + mode;
+  }
+  applyAccState(window.__ACC_STATE__);
+
+  (async function poll() {
+    let lastUpdate = window.__ACC_STATE__?.updated_at ?? '';
+    while (true) {
+      try {
+        const r = await fetch('./artifact-state.json?_=' + Date.now(), { cache: 'no-store' });
+        if (r.ok) {
+          const s = await r.json();
+          if (s.updated_at !== lastUpdate) {
+            lastUpdate = s.updated_at;
+            applyAccState(s);
+          }
+        }
+      } catch (e) {
+        /* swallow — fetch may be blocked on file://, and that's fine: the
+           inlined state has already set up the initial render. */
+      }
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+  })();
+</script>
+
+</body>
+</html>

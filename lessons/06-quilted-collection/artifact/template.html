@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>QuiltedCollection — ACC artifact</title>
+<style>
+  :root {
+    --bg: #0e1117;
+    --panel: #161b22;
+    --panel-2: #1f242d;
+    --border: #2a313c;
+    --fg: #d5d9e0;
+    --muted: #8b94a7;
+    --accent: #79b8ff;
+    --accent-2: #7ad9bf;
+    --good: #6dd56d;
+    --warn: #e6c07b;
+    --bad: #e08585;
+    --code-bg: #0b0e13;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    background: var(--bg);
+    color: var(--fg);
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  body { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+  h1 { font-size: 1.6rem; margin: 0 0 .25rem; }
+  h2 { font-size: 1.15rem; margin: 2rem 0 .6rem; padding-bottom: .3rem; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 1.0rem; margin: 1.2rem 0 .4rem; color: var(--accent-2); }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; color: #f0f3f7; }
+  pre { background: var(--code-bg); padding: .9rem 1rem; border-radius: 6px; overflow-x: auto; line-height: 1.45; }
+  pre code { background: transparent; padding: 0; }
+  .lede { color: var(--muted); }
+  section.acc-section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity .4s ease, transform .4s ease;
+    pointer-events: none;
+    height: 0;
+    overflow: hidden;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin: 0;
+  }
+  section.acc-section[data-visible="true"] {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    height: auto;
+    padding: 1.2rem 1.4rem;
+    margin: 1rem 0;
+  }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; background: var(--panel-2); color: var(--accent); margin-right: .5rem; }
+  svg { max-width: 100%; height: auto; display: block; margin: .6rem 0; }
+  .legend { font-size: .8rem; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<h1>QuiltedCollection — A 10K-Token ERC-721 Backed by Walrus Quilts</h1>
+<p class="lede" id="acc-progress">Lesson loading…</p>
+
+<!-- ============================================================ -->
+<!-- Section 1: storage + constructor                              -->
+<!-- ============================================================ -->
+<section class="acc-section" data-section-id="s01-storage-and-constructor">
+  <h2><span class="badge">Section 1</span> Storage + constructor</h2>
+
+  <p>Two storage strings (<code>quiltId</code>, <code>aggregator</code>), one immutable uint, one counter. The three constructor guards make every empty/zero deploy fail loudly instead of producing an unreachable collection.</p>
+
+  <svg viewBox="0 0 700 280" role="img" aria-label="QuiltedCollection storage layout">
+    <rect x="20" y="20" width="660" height="40" rx="8" fill="#1f242d" stroke="#79b8ff" />
+    <text x="350" y="46" text-anchor="middle" fill="#79b8ff" font-size="13" font-weight="600">QuiltedCollection storage</text>
+
+    <rect x="20" y="80" width="200" height="100" rx="8" fill="#1f242d" stroke="#e6c07b" />
+    <text x="120" y="106" text-anchor="middle" fill="#e6c07b" font-size="12" font-weight="600">string public quiltId</text>
+    <text x="120" y="128" text-anchor="middle" fill="#d5d9e0" font-size="11">base64url quilt id</text>
+    <text x="120" y="146" text-anchor="middle" fill="#8b94a7" font-size="10">— set in constructor</text>
+    <text x="120" y="162" text-anchor="middle" fill="#8b94a7" font-size="10">— never mutated again</text>
+
+    <rect x="240" y="80" width="200" height="100" rx="8" fill="#1f242d" stroke="#79b8ff" />
+    <text x="340" y="106" text-anchor="middle" fill="#79b8ff" font-size="12" font-weight="600">string public aggregator</text>
+    <text x="340" y="128" text-anchor="middle" fill="#d5d9e0" font-size="11">canonical resolver host</text>
+    <text x="340" y="146" text-anchor="middle" fill="#8b94a7" font-size="10">— set in constructor</text>
+    <text x="340" y="162" text-anchor="middle" fill="#8b94a7" font-size="10">— mutable via setAggregator</text>
+
+    <rect x="460" y="80" width="220" height="100" rx="8" fill="#1f242d" stroke="#7ad9bf" />
+    <text x="570" y="106" text-anchor="middle" fill="#7ad9bf" font-size="12" font-weight="600">uint256 immutable maxSupply</text>
+    <text x="570" y="128" text-anchor="middle" fill="#d5d9e0" font-size="11">+ uint256 _nextTokenId = 1</text>
+    <text x="570" y="146" text-anchor="middle" fill="#8b94a7" font-size="10">— maxSupply baked into bytecode</text>
+    <text x="570" y="162" text-anchor="middle" fill="#8b94a7" font-size="10">— counter starts at 1</text>
+
+    <rect x="20" y="200" width="660" height="60" rx="8" fill="#1f242d" stroke="#e08585" />
+    <text x="350" y="222" text-anchor="middle" fill="#e08585" font-size="12" font-weight="600">constructor guards (fail loudly at deploy)</text>
+    <text x="350" y="246" text-anchor="middle" fill="#d5d9e0" font-size="11">!empty(quiltId)  ·  !empty(aggregator)  ·  maxSupply &gt; 0</text>
+  </svg>
+
+  <p class="legend"><code>string</code> can't be <code>immutable</code> in Solidity. The convention "written once by constructor, no setter" is what makes <code>quiltId</code> effectively immutable — the language can't help you here.</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- Section 2: mint                                               -->
+<!-- ============================================================ -->
+<section class="acc-section" data-section-id="s02-mint">
+  <h2><span class="badge">Section 2</span> Self-mint with sequential ids + maxSupply cap</h2>
+
+  <p>Two one-character decisions — post-increment + <code>&lt;=</code> — define the exact <code>[1, maxSupply]</code> window.</p>
+
+  <svg viewBox="0 0 700 260" role="img" aria-label="mint window comparison">
+    <rect x="20" y="20" width="320" height="220" rx="8" fill="#1f242d" stroke="#6dd56d" />
+    <text x="180" y="46" text-anchor="middle" fill="#6dd56d" font-size="12" font-weight="600">our shape — post-increment + ≤</text>
+    <text x="180" y="76" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">_nextTokenId = 1 initially</text>
+    <text x="180" y="98" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">require(_nextTokenId &lt;= maxSupply)</text>
+    <text x="180" y="116" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">tokenId = _nextTokenId++;</text>
+    <text x="180" y="142" text-anchor="middle" fill="#7ad9bf" font-size="11">mint #1 → tokenId = 1</text>
+    <text x="180" y="160" text-anchor="middle" fill="#7ad9bf" font-size="11">mint #2 → tokenId = 2</text>
+    <text x="180" y="178" text-anchor="middle" fill="#7ad9bf" font-size="11">...</text>
+    <text x="180" y="196" text-anchor="middle" fill="#7ad9bf" font-size="11">mint #maxSupply → tokenId = maxSupply</text>
+    <text x="180" y="214" text-anchor="middle" fill="#e6c07b" font-size="11">mint #(maxSupply+1) → revert "sold out"</text>
+
+    <rect x="360" y="20" width="320" height="220" rx="8" fill="#1f242d" stroke="#e08585" />
+    <text x="520" y="46" text-anchor="middle" fill="#e08585" font-size="12" font-weight="600">trap — pre-increment + &lt;</text>
+    <text x="520" y="76" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">require(_nextTokenId &lt; maxSupply)</text>
+    <text x="520" y="94" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">tokenId = ++_nextTokenId;</text>
+    <text x="520" y="124" text-anchor="middle" fill="#e08585" font-size="11">mint #1 → tokenId = 2</text>
+    <text x="520" y="142" text-anchor="middle" fill="#e08585" font-size="11">  (skipped #1 entirely)</text>
+    <text x="520" y="168" text-anchor="middle" fill="#e08585" font-size="11">caps at maxSupply - 1 tokens</text>
+    <text x="520" y="186" text-anchor="middle" fill="#8b94a7" font-size="10">  (every off-by-one error</text>
+    <text x="520" y="202" text-anchor="middle" fill="#8b94a7" font-size="10">   you can make at once)</text>
+  </svg>
+
+  <p class="legend">The tests pin both characters: <code>test_mint_assignsSequentialIdsAndEmits</code> catches the increment direction, <code>test_mint_capsAtMaxSupply</code> catches the comparison operator.</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- Section 3: tokenURI                                           -->
+<!-- ============================================================ -->
+<section class="acc-section" data-section-id="s03-token-uri">
+  <h2><span class="badge">Section 3</span> <code>tokenURI</code> — the deterministic URL</h2>
+
+  <p>One <code>string.concat</code>, two SLOADs, one decimal conversion. Every token's URL derives from a SHARED prefix + a per-token id.</p>
+
+  <svg viewBox="0 0 700 240" role="img" aria-label="tokenURI URL structure">
+    <rect x="20" y="20" width="660" height="60" rx="8" fill="#1f242d" stroke="#79b8ff" />
+    <text x="350" y="46" text-anchor="middle" fill="#79b8ff" font-size="13" font-weight="600">tokenURI(tokenId) → string</text>
+    <text x="350" y="66" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">_requireOwned(tokenId)  →  string.concat(...)</text>
+
+    <rect x="20" y="100" width="660" height="60" rx="8" fill="#0b0e13" stroke="#7ad9bf" />
+    <text x="40" y="124" fill="#7ad9bf" font-size="11" font-weight="600">URL shape:</text>
+    <text x="40" y="146" fill="#d5d9e0" font-size="12" font-family="ui-monospace, monospace">  &lt;aggregator&gt;/v1/blobs/by-quilt-id/&lt;quiltId&gt;/&lt;tokenId&gt;.json</text>
+
+    <rect x="20" y="180" width="200" height="50" rx="8" fill="#1f242d" stroke="#e6c07b" />
+    <text x="120" y="200" text-anchor="middle" fill="#e6c07b" font-size="11" font-weight="600">shared prefix</text>
+    <text x="120" y="218" text-anchor="middle" fill="#8b94a7" font-size="10">2 SLOADs, every token</text>
+
+    <rect x="240" y="180" width="200" height="50" rx="8" fill="#1f242d" stroke="#79b8ff" />
+    <text x="340" y="200" text-anchor="middle" fill="#79b8ff" font-size="11" font-weight="600">per-token: decimal id</text>
+    <text x="340" y="218" text-anchor="middle" fill="#8b94a7" font-size="10">MiniStrings.toString</text>
+
+    <rect x="460" y="180" width="220" height="50" rx="8" fill="#1f242d" stroke="#6dd56d" />
+    <text x="570" y="200" text-anchor="middle" fill="#6dd56d" font-size="11" font-weight="600">.json suffix</text>
+    <text x="570" y="218" text-anchor="middle" fill="#8b94a7" font-size="10">constant tail</text>
+  </svg>
+
+  <p class="legend">10 000 tokens, 2 storage strings. Off-chain consumers reproduce the URL with zero RPC calls once they know the prefix.</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- Section 4: setAggregator                                      -->
+<!-- ============================================================ -->
+<section class="acc-section" data-section-id="s04-set-aggregator">
+  <h2><span class="badge">Section 4</span> <code>setAggregator</code> — the sunset knob</h2>
+
+  <p>One owner-only setter. The ONLY post-deploy mutable storage slot. Deliberate minimalism.</p>
+
+  <svg viewBox="0 0 700 260" role="img" aria-label="aggregator migration flow">
+    <defs>
+      <marker id="arrQ" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#8b94a7" />
+      </marker>
+    </defs>
+
+    <rect x="20" y="20" width="320" height="100" rx="8" fill="#1f242d" stroke="#e6c07b" />
+    <text x="180" y="46" text-anchor="middle" fill="#e6c07b" font-size="12" font-weight="600">before migration</text>
+    <text x="180" y="72" text-anchor="middle" fill="#d5d9e0" font-size="10" font-family="ui-monospace, monospace">aggregator = "agg.walrus-testnet.walrus.space"</text>
+    <text x="180" y="92" text-anchor="middle" fill="#d5d9e0" font-size="10" font-family="ui-monospace, monospace">tokenURI(1) = "https://agg.walrus-testnet…/1.json"</text>
+    <text x="180" y="108" text-anchor="middle" fill="#8b94a7" font-size="10">host sunsets</text>
+
+    <rect x="360" y="20" width="320" height="100" rx="8" fill="#1f242d" stroke="#6dd56d" />
+    <text x="520" y="46" text-anchor="middle" fill="#6dd56d" font-size="12" font-weight="600">after migration</text>
+    <text x="520" y="72" text-anchor="middle" fill="#d5d9e0" font-size="10" font-family="ui-monospace, monospace">aggregator = "agg.walrus.example"</text>
+    <text x="520" y="92" text-anchor="middle" fill="#d5d9e0" font-size="10" font-family="ui-monospace, monospace">tokenURI(1) = "https://agg.walrus.example/1.json"</text>
+    <text x="520" y="108" text-anchor="middle" fill="#7ad9bf" font-size="10">same bytes — Walrus is content-addressed</text>
+
+    <line x1="340" y1="70" x2="358" y2="70" stroke="#79b8ff" stroke-width="2" marker-end="url(#arrQ)" />
+    <text x="349" y="60" text-anchor="middle" fill="#79b8ff" font-size="9">1 tx</text>
+
+    <rect x="20" y="140" width="660" height="100" rx="8" fill="#1f242d" stroke="#79b8ff" />
+    <text x="350" y="166" text-anchor="middle" fill="#79b8ff" font-size="12" font-weight="600">function setAggregator(string calldata newAggregator) external onlyOwner</text>
+    <text x="350" y="190" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">require(bytes(newAggregator).length &gt; 0, "empty aggregator")</text>
+    <text x="350" y="208" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">emit AggregatorUpdated(aggregator, newAggregator)  ← BEFORE write</text>
+    <text x="350" y="226" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">aggregator = newAggregator</text>
+  </svg>
+
+  <h3>The equivalence gate</h3>
+  <svg viewBox="0 0 700 100" role="img" aria-label="forge test gate">
+    <rect x="20" y="20" width="660" height="60" rx="8" fill="#1f242d" stroke="#6dd56d" />
+    <text x="350" y="46" text-anchor="middle" fill="#6dd56d" font-size="13" font-weight="600">forge test — 12 tests across the QuiltedCollection suite</text>
+    <text x="350" y="68" text-anchor="middle" fill="#d5d9e0" font-size="11">constructor (4) · mint (2) · tokenURI (2) · setAggregator (4)</text>
+  </svg>
+  <p class="legend">The <code>setAggregator_ownerCanMigrateAggregator</code> test is the punchline: same token, different aggregator, new URL — Walrus's content-addressing makes the migration safe.</p>
+</section>
+
+<!-- ACC_STATE -->
+
+<script>
+  function applyAccState(s) {
+    if (!s) return;
+    const revealed = new Set(s.revealed || []);
+    for (const sec of document.querySelectorAll('section.acc-section')) {
+      const id = sec.getAttribute('data-section-id');
+      sec.setAttribute('data-visible', revealed.has(id) ? 'true' : 'false');
+    }
+    const cur = (typeof s.cursor === 'number') ? s.cursor + 1 : 0;
+    const total = s.total_sections ?? 0;
+    const mode = s.mode ?? '?';
+    const progress = document.getElementById('acc-progress');
+    if (progress) progress.textContent = 'Section ' + cur + ' of ' + total + ' · output mode: ' + mode;
+  }
+  applyAccState(window.__ACC_STATE__);
+
+  (async function poll() {
+    let lastUpdate = window.__ACC_STATE__?.updated_at ?? '';
+    while (true) {
+      try {
+        const r = await fetch('./artifact-state.json?_=' + Date.now(), { cache: 'no-store' });
+        if (r.ok) {
+          const s = await r.json();
+          if (s.updated_at !== lastUpdate) {
+            lastUpdate = s.updated_at;
+            applyAccState(s);
+          }
+        }
+      } catch (e) {
+        /* swallow */
+      }
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+  })();
+</script>
+
+</body>
+</html>
