@@ -2,6 +2,8 @@
 
 You have a site object id. To make it resolvable as `<your-name>.wal.app`, you need one more Sui transaction: a Move call that points your SuiNS `NameRegistration` at it.
 
+> **`wal.app` is mainnet-only.** The public `https://wal.app` portal serves only Mainnet sites that have a SuiNS name. A site published with the default `network: "testnet"` won't resolve there — to preview a testnet site you run a local portal. The SuiNS-link call below is the same on both networks (only the package id differs); the `.wal.app` URL just won't light up until you're on mainnet.
+
 Create `src/suins-link.ts`. Import the `Network` type from `./publish.ts`.
 
 In this section you'll write:
@@ -30,4 +32,4 @@ Why this matters:
 
 ## Verification
 
-Run `pnpm vitest run` from your workspace. All 22 tests across both suites should pass. This is also the lesson's final equivalence gate.
+Run `pnpm vitest run` from your workspace. All 23 tests across both suites should pass. This is also the lesson's final equivalence gate.

@@ -27,4 +27,6 @@ seeded stdout fixture and known-good Sui object ids. Real publishing happens
 afterward, with `site-builder` and a Sui wallet on your own machine.
 
 By the end you'll be able to explain — and test — every step of the
-EVM-dApp-frontend → Walrus Site → SuiNS → wal.app pipeline.
+EVM-dApp-frontend → Walrus Site → SuiNS → wal.app pipeline. (Note: the
+public `wal.app` portal only serves *mainnet* sites with a SuiNS name;
+testnet sites resolve through a self-hosted portal.)

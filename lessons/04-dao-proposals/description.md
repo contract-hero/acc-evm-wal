@@ -4,7 +4,10 @@ A 100-line Solidity contract that holds the skeleton of a vote (proposer,
 deadline, tallies) while the human-readable proposal body lives on Walrus.
 Snapshot uses 4Everland-hosted IPFS today; this pattern moves the body off
 the pinning vendor and onto Walrus, with the proposer paying WAL upfront
-to the public publisher. The contract never touches WAL.
+to a Walrus publisher. The contract never touches WAL. (On testnet the
+public publisher accepts uploads without auth; on mainnet there are no
+unauthenticated public publishers, so a production DAO would point
+proposers at a self-hosted or authenticated publisher.)
 
 In this lesson you'll write `Governance.sol` covering:
 

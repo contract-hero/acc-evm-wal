@@ -61,6 +61,13 @@ export interface ResolveOpts {
 const ZERO_BLOB = `0x${"00".repeat(32)}` as `0x${string}`;
 
 // Default pointer reader — issues one `eth_call` via viem.
+//
+// `chain: mainnet` here only supplies chain metadata (id, formatters); the
+// actual RPC endpoint comes from `rpcUrl`, so an `eth_call` to a read-only
+// `view` function works against any EVM network regardless of this value. If
+// you target a non-mainnet chain and want correct chain metadata, pass your
+// own `readPointer` via `ResolveOpts` (the injection seam below) with the
+// right `chain`.
 export const viemReadPointer: ReadPointer = async ({
   rpcUrl,
   resolverAddress,

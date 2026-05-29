@@ -10,10 +10,12 @@ In this section you'll declare:
 4. The `IENS public immutable ens;` field + a constructor that takes one.
 5. The private mapping: `mapping(bytes32 node => Pointer) private _pointers;`.
 6. The event: `event WalrusBlobChanged(bytes32 indexed node, bytes32 blobId, bytes32 suiObjectId, bytes8 contentType, uint64 at);` (only `node` is indexed — three indexed-topic slots is the EVM cap and the indexer only needs the `node` filter cheaply).
-7. The internal authorization helper:
+7. A constructor that rejects a zero ENS registry: `require(address(ens_) != address(0), "WalrusResolver: zero ENS registry");` before assigning `ens = ens_;`.
+8. The internal authorization helper:
    ```solidity
    function _requireAuthorized(bytes32 node) internal view {
        address nodeOwner = ens.owner(node);
+       require(nodeOwner != address(0), "WalrusResolver: node has no owner");
        require(
            nodeOwner == msg.sender || ens.isApprovedForAll(nodeOwner, msg.sender),
            "WalrusResolver: not authorized"
@@ -40,6 +42,8 @@ A naive design would have stored an `owners` mapping inside this contract and sh
 By delegating to `ens.owner(node)` and `ens.isApprovedForAll(...)` at the moment of the call, the contract inherits the WHOLE ENSIP-1 authorization model: ownership transfers carry the pointer authority with them, and any operator a name's owner approved on the ENS registry automatically has authority here. Zero claim step. Zero state to keep in sync.
 
 The price is one external view per mutation — one `STATICCALL` to the ENS registry on top of the `SLOAD`/`SSTORE` work. Cheap.
+
+**One defensive check the delegation forces on you:** reject `nodeOwner == address(0)` BEFORE the approval check. An unregistered or expired ENS node resolves to `owner == address(0)`. Without the guard, a registry where `isApprovedForAll(address(0), caller)` returns `true` (or a mock/forked registry that does) would let an attacker write a pointer for a node nobody owns. The `require(nodeOwner != address(0), ...)` line closes that hole — and the same reasoning is why the constructor rejects a zero ENS registry address.
 
 ## Verification
 

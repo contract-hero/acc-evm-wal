@@ -6,7 +6,7 @@ In this section you'll write:
 
 1. A `SITE_NAME_PATTERN` regex that constrains the human-readable site label to filename-safe characters.
 2. A `NETWORKS` tuple — exactly `["testnet", "mainnet"]` — exported as the `Network` union type.
-3. A `validatePublishOpts(opts)` function that takes loose `PublishOpts` and returns a fully-defaulted `ValidatedPublishOpts`. It applies defaults (`epochs: 200`, `network: "testnet"`) and throws a descriptive `Error` on every invalid field.
+3. A `validatePublishOpts(opts)` function that takes loose `PublishOpts` and returns a fully-defaulted `ValidatedPublishOpts`. It applies defaults (`epochs: 53`, `network: "testnet"`) and throws a descriptive `Error` on every invalid field — including `epochs` that aren't positive integers AND `epochs` greater than the Walrus maximum of **53** (defined as a `MAX_EPOCHS = 53` constant). Walrus rejects a store longer than 53 epochs (~2 years) at the network, so catching it here turns a confusing CLI failure into a clear local error.
 
 ## What you'll write
 
@@ -27,4 +27,4 @@ Restricting to `[A-Za-z0-9._-]{1,64}` is what makes each stage of that pipeline 
 
 ## Verification
 
-Run `pnpm vitest run tests/publish.test.ts -t validatePublishOpts` from your workspace. All nine `validatePublishOpts` tests should pass. The `buildPublishArgs` and `parseSiteObjectId` tests will still fail — that's expected; you haven't written those functions yet.
+Run `pnpm vitest run tests/publish.test.ts -t validatePublishOpts` from your workspace. All ten `validatePublishOpts` tests should pass. The `buildPublishArgs` and `parseSiteObjectId` tests will still fail — that's expected; you haven't written those functions yet.

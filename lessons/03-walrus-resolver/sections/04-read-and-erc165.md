@@ -43,11 +43,12 @@ The deliberate minimalism means consumers MUST detect this resolver's surface by
 
 ## Verification
 
-Run `forge test` from your workspace. All **8 tests** should pass — this is the lesson's final equivalence gate:
+Run `forge test` from your workspace. All **9 tests** should pass — this is the lesson's final equivalence gate:
 
 ```
 test_setWalrusBlob_storesPointerAndEmits
 test_setWalrusBlob_revertsForUnauthorized
+test_setWalrusBlob_revertsForUnownedNode
 test_setWalrusBlob_allowsApprovedOperator
 test_setWalrusBlob_overwritePicksUpNewENSOwner
 test_clearWalrusBlob_zerosPointerAndEmits

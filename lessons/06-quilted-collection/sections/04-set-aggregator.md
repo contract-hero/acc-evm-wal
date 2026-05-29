@@ -8,11 +8,13 @@ In this section you'll write:
 
 ```solidity
 function setAggregator(string calldata newAggregator) external onlyOwner {
-    require(bytes(newAggregator).length > 0, "QuiltedCollection: empty aggregator");
+    _validateAggregator(bytes(newAggregator));
     emit AggregatorUpdated(aggregator, newAggregator);
     aggregator = newAggregator;
 }
 ```
+
+Note it reuses the SAME `_validateAggregator` helper the constructor calls (Section 1) — so the setter rejects an empty string AND a trailing-slash URL with the identical rule, no copy-paste.
 
 That's the entire change — the contract is now complete.
 
@@ -39,7 +41,7 @@ What this knob is NOT for:
 - **Patching metadata for individual tokens.** That's not what an aggregator does. Aggregators serve the bytes the quilt holds; the quilt itself is immutable. To change a token's metadata you'd need a new quilt — and either a new deployment or a more elaborate redirection scheme.
 - **Re-targeting an existing collection at a DIFFERENT quilt.** `quiltId` has no setter. Re-targeting would require a redeployment.
 
-The minimalism is the point. `onlyOwner` gates it — anyone trying without owner rights gets `OwnableUnauthorizedAccount(account)` from the vendored `MiniOwnable`. The non-empty `require` is the same shape as the constructor check. The `AggregatorUpdated` event surfaces the change so indexers can re-fetch immediately rather than waiting for cache TTLs to expire.
+The minimalism is the point. `onlyOwner` gates it — anyone trying without owner rights gets `OwnableUnauthorizedAccount(account)` from the vendored `MiniOwnable`. The `_validateAggregator` call enforces the exact same two rules (non-empty, no trailing slash) the constructor does. The `AggregatorUpdated` event surfaces the change so indexers can re-fetch immediately rather than waiting for cache TTLs to expire.
 
 Some collections add a second knob — `setRoyaltyRecipient`, `setBaseURI`, etc. Resist the urge unless you have a clear "this could plausibly need to move post-deploy" use case. The fewer mutable storage slots a contract has, the more honest its "deploy-once, run-forever" story becomes. For NFT collections specifically, the failure mode of "owner forgot they had a setter and an attacker exploited it" is the entire category that `setAggregator` exemplifies — by being the ONLY one, it's also the one you can fully audit.
 

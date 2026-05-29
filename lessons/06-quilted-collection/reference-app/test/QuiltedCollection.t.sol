@@ -74,7 +74,7 @@ contract QuiltedCollectionTest is MiniTest {
     }
 
     function test_mint_assignsSequentialIdsAndEmits() public {
-        // MiniERC721._safeMint emits Transfer(address(0), to, tokenId) before
+        // MiniERC721._mint emits Transfer(address(0), to, tokenId) before
         // QuiltedCollection.mint emits Minted(tokenId, to). Pin both.
         vm.expectEmit(true, true, true, false);
         emit Transfer(address(0), alice, 1);

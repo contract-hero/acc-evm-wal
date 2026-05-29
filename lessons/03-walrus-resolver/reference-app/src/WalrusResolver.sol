@@ -24,7 +24,7 @@ interface IERC165 {
 /// SSTORE per update and no on-chain version array.
 contract WalrusResolver is IERC165 {
     struct Pointer {
-        bytes32 blobId;       // Walrus content address (32-byte BLAKE2b-256)
+        bytes32 blobId;       // 256-bit Walrus blob id (u256-width content address)
         bytes32 suiObjectId;  // on-Sui Blob object id (the keeper's handle)
         bytes8 contentType;   // ASCII MIME shortcode, e.g. "text/md", "app/json"
     }
@@ -33,6 +33,9 @@ contract WalrusResolver is IERC165 {
 
     mapping(bytes32 node => Pointer) private _pointers;
 
+    // `at` is a uint64 unix-seconds timestamp. The uint64(block.timestamp)
+    // downcast at the emit sites is safe: block.timestamp won't exceed 2^64
+    // until well past year 2554, so no value is ever truncated.
     event WalrusBlobChanged(
         bytes32 indexed node,
         bytes32 blobId,
@@ -42,6 +45,7 @@ contract WalrusResolver is IERC165 {
     );
 
     constructor(IENS ens_) {
+        require(address(ens_) != address(0), "WalrusResolver: zero ENS registry");
         ens = ens_;
     }
 
@@ -91,6 +95,11 @@ contract WalrusResolver is IERC165 {
 
     function _requireAuthorized(bytes32 node) internal view {
         address nodeOwner = ens.owner(node);
+        // Reject unowned nodes BEFORE the approval check: a registry that
+        // returns address(0) for an unregistered/expired node could otherwise
+        // pair with an isApprovedForAll(address(0), caller) == true to let an
+        // attacker write a pointer for a node nobody owns.
+        require(nodeOwner != address(0), "WalrusResolver: node has no owner");
         require(
             nodeOwner == msg.sender || ens.isApprovedForAll(nodeOwner, msg.sender),
             "WalrusResolver: not authorized"

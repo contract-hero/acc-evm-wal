@@ -19,7 +19,8 @@ describe("bytes32ToBase64Url", () => {
   });
 
   it("matches the canonical base64url for a known blob id", () => {
-    // BLAKE2b-256("walrus-demo-token-list") computed offline.
+    // Arbitrary known 32-byte value (just ascending byte pairs), with its
+    // base64url encoding precomputed offline — exercises the full alphabet.
     const hex = "0x0001020304050607080910111213141516171819202122232425262728293031";
     const out = bytes32ToBase64Url(hex as `0x${string}`);
     expect(out).toBe("AAECAwQFBgcICRAREhMUFRYXGBkgISIjJCUmJygpMDE");

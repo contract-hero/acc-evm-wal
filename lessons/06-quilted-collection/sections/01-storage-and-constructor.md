@@ -31,11 +31,22 @@ In this section you'll write:
        address initialOwner
    ) MiniERC721(name_, symbol_) MiniOwnable(initialOwner) {
        require(bytes(quiltId_).length > 0, "QuiltedCollection: empty quiltId");
-       require(bytes(aggregator_).length > 0, "QuiltedCollection: empty aggregator");
+       _validateAggregator(bytes(aggregator_));
        require(maxSupply_ > 0, "QuiltedCollection: zero maxSupply");
        quiltId = quiltId_;
        aggregator = aggregator_;
        maxSupply = maxSupply_;
+   }
+   ```
+7. The shared aggregator validator — a `private pure` helper the constructor AND `setAggregator` (Section 4) both call, so the rule lives in exactly one place:
+   ```solidity
+   /// @dev Aggregator URL must be non-empty AND must NOT end in `/` — tokenURI
+   /// concats `aggregator + "/v1/blobs/..."`, and a trailing slash would produce
+   /// `//` in every token URL, which strict CDNs reject and most marketplaces
+   /// render as broken metadata.
+   function _validateAggregator(bytes memory aggBytes) private pure {
+       require(aggBytes.length > 0, "QuiltedCollection: empty aggregator");
+       require(aggBytes[aggBytes.length - 1] != 0x2f, "QuiltedCollection: aggregator must not end with /");
    }
    ```
 
@@ -43,7 +54,9 @@ The contract is not yet complete (no `mint`, no `tokenURI`, no `setAggregator`) 
 
 ## What you'll write
 
-- `src/QuiltedCollection.sol` — the storage, the events, the constructor. The remaining external functions land in Sections 2, 3, 4.
+- `src/QuiltedCollection.sol` — the storage, the events, the constructor, and the `_validateAggregator` helper. The remaining external functions land in Sections 2, 3, 4.
+
+> **Why a helper instead of an inline `require`?** The aggregator string has TWO rules (non-empty, no trailing slash), and BOTH the constructor and `setAggregator` must enforce them identically. Factoring the rule into `_validateAggregator` means the final test gate's `*_revertsOnAggregatorTrailingSlash` cases pass for both entry points from one source of truth — an inline `require(bytes(aggregator_).length > 0)` in each would drift.
 
 ## The key moment
 

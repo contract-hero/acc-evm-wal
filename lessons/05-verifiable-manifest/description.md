@@ -9,6 +9,17 @@ function call.
 It's the missing piece between the on-chain primitive and the dApp that
 uses it.
 
+**What "verifiable" means here — read this before the title misleads you.**
+The tamper-resistance comes from the POINTER, not from re-hashing the bytes.
+The blob id lives on-chain in the `WalrusResolver`, so nobody can swap which
+manifest a name points at without an authorized transaction you can see. The
+client in this lesson still TRUSTS the aggregator to return the bytes that
+match that blob id — it does not recompute the Walrus content address
+client-side. That's the right trade-off for a read-mostly dApp (one
+`eth_call` beats IPNS), but it is not trustless retrieval. For that, layer a
+`@mysten/walrus`-based verifier that recomputes the blob id over the fetched
+bytes on top of this client.
+
 In this lesson you'll write a small TypeScript module covering:
 
 1. **Encoding helpers** — `bytes32 → base64url` (the aggregator URL slug)

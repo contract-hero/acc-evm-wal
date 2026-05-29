@@ -53,7 +53,7 @@ For this lesson, the simplification stays. The reference-app's mock token delibe
 ### Two smaller subtleties worth catching
 
 - **`weight <= type(uint128).max`** — the Proposal struct stores tallies as `uint128`. Without the upper-bound check, a token with > 2^128 supply could overflow on cast. `require` it explicitly, don't lean on Solidity 0.8's checked arithmetic for boundary safety inside the cast.
-- **`hasVoted[id][msg.sender] = true;` BEFORE the tally update** — checks-effects-interactions hygiene. The `balanceOf` call is an external call (could theoretically reenter via a malicious token). Setting `hasVoted` before the tally write means a reentrant `vote(id, ...)` call by the same address would hit the `Governance: already voted` revert.
+- **What actually stops reentrancy here is that `balanceOf` is `view`.** A `view` function is compiled to a `STATICCALL`, which the EVM forbids from making ANY state change — so even a malicious `voteToken.balanceOf` cannot re-enter `vote()` and mutate the tally. That's the real guarantee, and it holds regardless of statement order. Note that `hasVoted[id][msg.sender] = true;` is set AFTER the `balanceOf` call, not before — which is safe ONLY because the call is read-only. If `vote()` ever made a STATE-MUTATING external call (a token transfer, a hook), you would need strict checks-effects-interactions: set `hasVoted` (and ideally take payment/weight) BEFORE the external call, or add a reentrancy guard. The lesson here is to know WHICH property is protecting you — `view`/`STATICCALL` here, CEI ordering when the call can write.
 
 ## Verification
 

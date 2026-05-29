@@ -1,5 +1,7 @@
 out/
 cache/
 broadcast/
-lib/
+# Anchored so it only ignores Foundry's root-level dependency dir, NOT the
+# vendored src/lib/ (MiniERC721 / MiniOwnable / MiniStrings).
+/lib/
 .env

@@ -69,7 +69,7 @@ contract QuiltedCollection is MiniERC721, MiniOwnable {
     function mint() external returns (uint256 tokenId) {
         require(_nextTokenId <= maxSupply, "QuiltedCollection: sold out");
         tokenId = _nextTokenId++;
-        _safeMint(msg.sender, tokenId);
+        _mint(msg.sender, tokenId);
         emit Minted(tokenId, msg.sender);
     }
 

@@ -38,7 +38,7 @@ Both `setWalrusBlob(node, 0, 0, 0)` and `clearWalrusBlob(node)` emit the same fi
 
 **2. `delete _pointers[node]` is cheaper than three `SSTORE`s to zero.**
 
-`delete` on a struct slot triggers a refund (~15k gas per non-zero slot returning to zero). A self-call to `setWalrusBlob` would emit one external call's overhead, run the auth gate twice, and explicitly write the zero values. Using `delete` skips all of that and gets the refund.
+`delete` on a struct slot triggers a refund for each non-zero slot returning to zero. Since EIP-3529 (London, 2021) that refund is 4,800 gas per cleared slot — down from the pre-London 15,000 — and the total refund is capped at 20% of the transaction's gas used. A self-call to `setWalrusBlob` would add one external call's overhead, run the auth gate twice, and explicitly write the zero values. Using `delete` skips all of that and still collects the (post-3529) refund.
 
 **Bonus subtlety**: the explicit `emit WalrusBlobChanged(node, 0, 0, 0, ...)` is REQUIRED. `delete` zeros storage but doesn't emit anything; indexers would silently miss the clear if you omitted the event.
 

@@ -14,6 +14,11 @@
 const SITE_NAME_PATTERN = /^[A-Za-z0-9._-]{1,64}$/;
 const NETWORKS = ["testnet", "mainnet"] as const;
 
+// Walrus caps a single store at 53 epochs (~2 years) on both testnet and
+// mainnet. Asking site-builder for more is rejected at the network, so we
+// catch it here as a clear local error instead of a confusing CLI failure.
+const MAX_EPOCHS = 53;
+
 export type Network = (typeof NETWORKS)[number];
 
 export interface PublishOpts {
@@ -21,7 +26,7 @@ export interface PublishOpts {
   siteDir: string;
   // Human-readable site label. Stored on the Walrus Site object.
   siteName: string;
-  // Storage budget in Walrus epochs. Defaults to 200.
+  // Storage budget in Walrus epochs. Defaults to 53 (the Walrus maximum).
   epochs?: number;
   // Sui network context. Defaults to "testnet".
   network?: Network;
@@ -47,9 +52,14 @@ export function validatePublishOpts(opts: PublishOpts): ValidatedPublishOpts {
     );
   }
 
-  const epochs = opts.epochs ?? 200;
+  const epochs = opts.epochs ?? MAX_EPOCHS;
   if (!Number.isInteger(epochs) || epochs <= 0) {
     throw new Error(`epochs must be a positive integer (got: ${epochs})`);
+  }
+  if (epochs > MAX_EPOCHS) {
+    throw new Error(
+      `epochs must be at most ${MAX_EPOCHS} (the Walrus maximum; got: ${epochs})`,
+    );
   }
 
   const network = opts.network ?? "testnet";

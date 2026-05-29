@@ -18,7 +18,7 @@ describe("validatePublishOpts", () => {
     expect(v).toEqual({
       siteDir: "./out",
       siteName: "my-site",
-      epochs: 200,
+      epochs: 53,
       network: "testnet",
     });
   });
@@ -71,6 +71,12 @@ describe("validatePublishOpts", () => {
     ).toThrow(/epochs must be a positive integer/);
   });
 
+  it("rejects epochs over the Walrus maximum of 53", () => {
+    expect(() =>
+      validatePublishOpts({ siteDir: "./out", siteName: "ok", epochs: 54 }),
+    ).toThrow(/epochs must be at most 53/);
+  });
+
   it("rejects an unknown network", () => {
     expect(() =>
       validatePublishOpts({
@@ -88,7 +94,7 @@ describe("buildPublishArgs", () => {
     const args = buildPublishArgs({
       siteDir: "./out",
       siteName: "demo",
-      epochs: 200,
+      epochs: 53,
       network: "testnet",
     });
     expect(args).toEqual([
@@ -97,7 +103,7 @@ describe("buildPublishArgs", () => {
       "publish",
       "./out",
       "--epochs",
-      "200",
+      "53",
       "--site-name",
       "demo",
     ]);
@@ -107,11 +113,11 @@ describe("buildPublishArgs", () => {
     const args = buildPublishArgs({
       siteDir: "./dist",
       siteName: "prod",
-      epochs: 1000,
+      epochs: 30,
       network: "mainnet",
     });
     expect(args.slice(0, 2)).toEqual(["--context", "mainnet"]);
-    expect(args.slice(-4)).toEqual(["--epochs", "1000", "--site-name", "prod"]);
+    expect(args.slice(-4)).toEqual(["--epochs", "30", "--site-name", "prod"]);
   });
 });
 

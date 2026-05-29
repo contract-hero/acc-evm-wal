@@ -80,6 +80,14 @@ One field added to `Proposal`, one field set in `propose`, one call substituted 
 
 The lesson is the SEPARATION of concerns: a single contract can demonstrate the Walrus integration cleanly OR demonstrate production-safe voting cleanly, but combining both would have buried the Walrus payload pattern in OpenZeppelin scaffolding. The warning makes the boundary explicit so the next implementer doesn't accidentally inherit the wrong shape.
 
+**The flash-loan snapshot is necessary, not sufficient.** Past-balance voting closes the flash-loan hole, but a production DAO still needs several things this showcase deliberately omits — don't ship the simplified shape thinking the snapshot alone makes it safe:
+
+- **Quorum** — a minimum total weight that must participate, so a proposal can't pass on one voter while everyone else is asleep. This showcase's `tally` calls a proposal `passed` on any `yes > no`.
+- **Proposal threshold** — a minimum balance to *create* a proposal, to stop spam. Here anyone can `propose`.
+- **Voting delay + timelock** — a delay between proposal creation and voting (so the snapshot block is settled and voters can react) and a delay between a passed vote and execution (so users can exit before a malicious change lands). These are a SEPARATE concern from the flash-loan fix — a timelock does not prevent flash-loan voting, and a snapshot does not give users an exit window. OpenZeppelin's `Governor` + `TimelockController` provide both.
+
+OpenZeppelin's `Governor` module composes all of these; reach for it rather than hand-rolling once you're past the showcase.
+
 ## Verification
 
 Run `forge test` from your workspace. All **12 tests** should pass — this is the lesson's final equivalence gate:

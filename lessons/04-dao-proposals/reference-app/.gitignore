@@ -1,5 +1,6 @@
 out/
 cache/
 broadcast/
-lib/
+# Anchored: only the Foundry root-level dependency dir, never a nested src/lib/.
+/lib/
 .env

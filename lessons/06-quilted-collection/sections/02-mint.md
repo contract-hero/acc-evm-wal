@@ -10,7 +10,7 @@ In this section you'll write:
 function mint() external returns (uint256 tokenId) {
     require(_nextTokenId <= maxSupply, "QuiltedCollection: sold out");
     tokenId = _nextTokenId++;
-    _safeMint(msg.sender, tokenId);
+    _mint(msg.sender, tokenId);
     emit Minted(tokenId, msg.sender);
 }
 ```
@@ -63,7 +63,9 @@ The off-by-one risk is exactly the kind of thing the test suite pins:
 - `test_mint_assignsSequentialIdsAndEmits` verifies the first two mints have ids `1` and `2` (catches pre-increment).
 - `test_mint_capsAtMaxSupply` mints exactly `maxSupply` (= 3 in the test setup) successfully and the 4th reverts (catches `<` vs `<=`).
 
-There's a small bonus property here: **the cap check is the function's first line, before `_safeMint` touches storage.** The vendored `MiniERC721` in this workspace is a stripped-down stand-in — its `_safeMint` only writes the owner mapping, bumps the balance, and emits `Transfer`. (It deliberately does NOT call `IERC721Receiver.onERC721Received`; production code should pair the production OZ `_safeMint` with a real receiver callback when minting to contracts. See `src/lib/MiniERC721.sol` for the scope of the substitute.)
+There's a small bonus property here: **the cap check is the function's first line, before `_mint` touches storage.** The vendored `MiniERC721` in this workspace is a stripped-down stand-in — its `_mint` only writes the owner mapping, bumps the balance, and emits `Transfer`.
+
+**Why the helper is `_mint`, not `_safeMint`.** OpenZeppelin draws a sharp line: `_safeMint` calls `onERC721Received` on a contract recipient so tokens can't be minted into a contract that has no way to handle them (where they'd be permanently stuck); plain `_mint` skips that callback. The vendored stand-in does NOT implement the receiver check, so it is honestly named `_mint` — the name tells you the safety hook is absent. Production code minting to arbitrary addresses should use OpenZeppelin's real `_safeMint`. See `src/lib/MiniERC721.sol` for the full list of what the substitute omits.
 
 ## Verification
 

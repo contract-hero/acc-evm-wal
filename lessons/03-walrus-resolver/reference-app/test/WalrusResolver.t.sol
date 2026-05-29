@@ -104,6 +104,15 @@ contract WalrusResolverTest is MiniTest {
         resolver.setWalrusBlob(node, blobId, suiObjectId, ct);
     }
 
+    function test_setWalrusBlob_revertsForUnownedNode() public {
+        // A node nobody owns (registry returns address(0)) must be rejected
+        // before the approval check — no caller is authorized over it.
+        bytes32 orphan = keccak256("never.registered.eth");
+        vm.prank(mallory);
+        vm.expectRevert(bytes("WalrusResolver: node has no owner"));
+        resolver.setWalrusBlob(orphan, blobId, suiObjectId, ct);
+    }
+
     function test_setWalrusBlob_allowsApprovedOperator() public {
         vm.prank(vitalik);
         ens.setApprovalForAll(operator_, true);

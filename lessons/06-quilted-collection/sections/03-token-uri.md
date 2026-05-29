@@ -48,6 +48,8 @@ The URL shape is uniform across every token:
 <aggregator>/v1/blobs/by-quilt-id/<quiltId>/<tokenId>.json
 ```
 
+This shape only resolves if the metadata quilt was packed with each entry's identifier matching the `<tokenId>.json` suffix — i.e. files named `1.json`, `2.json`, … When you `walrus store-quilt --paths ./metadata`, each file's name becomes its quilt identifier, so the metadata directory must use those exact decimal-plus-`.json` filenames for `tokenURI(id)` to point at the right patch.
+
 The only thing that differs per-token is the decimal id at the end. Which means:
 
 - **Off-chain URL derivation is RPC-free.** A wallet or marketplace that knows `aggregator` and `quiltId` (one Etherscan lookup at deploy time) can compute every token's URL with no eth_call per render. Compare to IPFS-pinned collections where the marketplace either does one eth_call per token or trusts an indexer's cache.
