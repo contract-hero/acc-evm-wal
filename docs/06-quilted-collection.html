@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 06 · QuiltedCollection — acc-evm-wal</title>
+  <meta name="description" content="Build an ERC-721 whose 10 000 tokens' metadata + images live in two Walrus Quilts instead of 10 000 IPFS pins. Deterministic tokenURI, owner-only aggregator migration, four sections, Foundry tests.">
+  <link rel="stylesheet" href="style.css">
+  <script src="theme.js"></script>
+</head>
+<body>
+  <header class="site">
+    <div class="wrap-wide">
+      <a class="brand" href="./" aria-label="acc-evm-wal home">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+          <rect x="2" y="2" width="28" height="28" rx="6" fill="#0f4c75"/>
+          <path d="M16 6 C 11 11, 11 18, 16 25 C 21 18, 21 11, 16 6 Z" fill="#4da2ff" fill-opacity="0.95"/>
+          <circle cx="16" cy="16" r="2.2" fill="#fff"/>
+        </svg>
+        <span>acc-evm-wal</span>
+      </a>
+      <nav class="site-nav" aria-label="Page contents">
+        <span class="crumbs"><a href="./">lessons</a> / <strong>06 · QuiltedCollection</strong></span>
+        <a href="https://github.com/contract-hero/acc-evm-wal">GitHub</a>
+        <button class="theme-toggle" type="button" aria-label="Toggle color theme">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" id="top">
+      <div class="wrap">
+        <span class="eyebrow">Lesson 06 · Foundry</span>
+        <h1>Ship a 10 000-token ERC-721 with <em>two storage strings</em>, not 10 000 IPFS pins.</h1>
+        <p class="lede">
+          Build an ERC-721 whose 10 000 tokens' metadata + images live in two Walrus Quilts — one for each — instead of
+          10 000 IPFS pins. <code>tokenURI(id)</code> returns a deterministic aggregator URL with no per-token state.
+          Includes an owner-only aggregator-migration knob for sunset resilience.
+        </p>
+        <div class="meta">
+          <span><strong>Slug:</strong> <code>06-quilted-collection</code></span>
+          <span><strong>Stack:</strong> Foundry · vendored MiniERC721 / MiniOwnable / MiniStrings</span>
+          <span><strong>Sections:</strong> 4</span>
+          <span><strong>Final gate:</strong> <code>forge test</code> · 12 tests</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="sections">
+      <div class="wrap">
+        <h2>What you'll write</h2>
+        <p class="section-lede">
+          One file: <code>src/QuiltedCollection.sol</code>. The reference-app pre-provides <code>src/lib/</code> with
+          minimal substitutes for OpenZeppelin's ERC-721, Ownable, and Strings — vendored so the workspace stays free of
+          <code>forge install</code>. The lesson teaches the integration shape; production should pair the real OZ
+          contracts with the same Walrus-quilt URL pattern.
+        </p>
+
+        <ul class="section-cards">
+          <li>
+            <div class="head"><span class="id">s01 · storage</span></div>
+            <h3>Storage + constructor (and why <code>quiltId</code> isn't immutable)</h3>
+            <p class="key">
+              <strong>Solidity does not allow <code>immutable</code> on <code>string</code></strong> — <code>quiltId</code>
+              and <code>aggregator</code> are plain storage variables, conventionally written-once by the constructor. The
+              CONVENTION is what guarantees immutability of <code>quiltId</code> — the absence of any setter is the proof.
+              For <code>aggregator</code> the deliberate <code>setAggregator</code> setter exists as a sunset knob.
+            </p>
+          </li>
+
+          <li>
+            <div class="head"><span class="id">s02 · mint</span></div>
+            <h3>Self-mint with sequential ids + maxSupply cap</h3>
+            <p class="key">
+              <strong><code>tokenId = _nextTokenId++;</code> (post-increment)</strong> — the local <code>tokenId</code>
+              gets the CURRENT value (1 on first mint), then storage gets bumped to 2 for the next call. Combined with the
+              <code>&lt;=</code> cap (not <code>&lt;</code>), this produces a half-open-then-closed window that mints
+              exactly <code>[1, maxSupply]</code> and rejects the <code>(maxSupply+1)</code>-th call.
+            </p>
+          </li>
+
+          <li>
+            <div class="head"><span class="id">s03 · tokenURI</span></div>
+            <h3><code>tokenURI</code> — building the deterministic aggregator URL</h3>
+            <p class="key">
+              <strong><code>tokenURI</code> is a PURE STRING-CONCAT</strong> — no SLOAD other than the two storage
+              strings, no mapping lookup, no per-token state. The URL shape
+              <code>&lt;aggregator&gt;/v1/blobs/by-quilt-id/&lt;quiltId&gt;/&lt;tokenId&gt;.json</code> is uniform across
+              every token; the only thing that differs per token is the decimal id. That's what collapses 10 000 token
+              URIs into two storage strings.
+            </p>
+          </li>
+
+          <li>
+            <div class="head"><span class="id">s04 · setAggregator</span></div>
+            <h3><code>setAggregator</code> — the sunset-migration knob</h3>
+            <p class="key">
+              <strong><code>setAggregator</code> is owner-only and the ONLY mutable storage slot after deployment.</strong>
+              Walrus aggregator hosts are commodity HTTPS endpoints, and any specific host might sunset. Because Walrus
+              blobs are content-addressed, pointing at a different aggregator returns the SAME bytes — only the URL prefix
+              changes. The migration is one transaction, costs no re-pinning, and surfaces as an
+              <code>AggregatorUpdated</code> event for indexers to follow.
+            </p>
+          </li>
+        </ul>
+
+        <div class="verify-block">
+          <h3>Verification</h3>
+          <p>Twelve Foundry tests — constructor validation (4, including trailing-slash rejection), mint (2), tokenURI (2), setAggregator (4). The <code>test_setAggregator_ownerCanMigrateAggregator</code> test is the punchline: same token, different aggregator, new URL.</p>
+          <pre><code>forge test</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section id="sources">
+      <div class="wrap">
+        <h2>Sources</h2>
+        <p class="section-lede">Read the reference-app on GitHub, or follow the upstream walkthrough for the two-quilt packing pipeline.</p>
+        <ul class="build-list" style="grid-template-columns: 1fr; gap: 12px;">
+          <li><strong>Reference-app:</strong> <a href="https://github.com/contract-hero/acc-evm-wal/tree/main/lessons/06-quilted-collection/reference-app">lessons/06-quilted-collection/reference-app/</a> — Foundry workspace with vendored Mini-* libs.</li>
+          <li><strong>Lesson sections:</strong> <a href="https://github.com/contract-hero/acc-evm-wal/tree/main/lessons/06-quilted-collection/sections">lessons/06-quilted-collection/sections/</a> — the four section prompts.</li>
+          <li><strong>evm-sui walkthrough:</strong> <a href="https://mystenlabs.github.io/evm-sui/06-quilted-collection.html">06-quilted-collection — quilted NFT drops</a> — includes the TypeScript <code>pack</code>, <code>deploy</code>, and <code>url</code> scripts.</li>
+          <li><strong>Walrus Quilts:</strong> <a href="https://docs.wal.app/walrus/storage/quilts.html">Walrus Quilts docs</a>.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site">
+    <div class="wrap-wide">
+      <div>
+        acc-evm-wal · course content for the
+        <a href="https://github.com/contract-hero/agentic-community-college">ACC</a> framework
+      </div>
+      <div>
+        <a href="./">All lessons</a> ·
+        <a href="https://github.com/contract-hero/acc-evm-wal">Source</a> ·
+        <a href="https://docs.wal.app">Walrus docs</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
