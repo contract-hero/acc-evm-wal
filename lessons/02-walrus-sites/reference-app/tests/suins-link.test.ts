@@ -59,6 +59,18 @@ describe("buildSetWalrusSiteCall", () => {
     ).toThrow(/siteObjectId/);
   });
 
+  it("rejects an invalid suinsPackageId override", () => {
+    expect(() =>
+      buildSetWalrusSiteCall({
+        network: "testnet",
+        nameRegistrationObjectId: VALID_NAME_REG,
+        siteObjectId: VALID_SITE,
+        // @ts-expect-error — intentional invalid input
+        suinsPackageId: "0xZZ",
+      }),
+    ).toThrow(/suinsPackageId/);
+  });
+
   it("preserves the order of args as [name, site]", () => {
     const call = buildSetWalrusSiteCall({
       network: "testnet",

@@ -9,6 +9,7 @@ interface Vm {
     function stopPrank() external;
     function expectRevert(bytes calldata revertData) external;
     function expectRevert() external;
+    function expectEmit(bool checkTopic1, bool checkTopic2, bool checkTopic3, bool checkData) external;
 }
 
 abstract contract MiniTest {
@@ -37,6 +38,10 @@ contract QuiltedCollectionTest is MiniTest {
     address internal alice = address(0xA11CE);
     address internal owner_ = address(0xBEEF);
 
+    event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
+    event Minted(uint256 indexed tokenId, address indexed to);
+    event AggregatorUpdated(string oldAggregator, string newAggregator);
+
     function setUp() public {
         c = new QuiltedCollection("Drop", "DROP", QUILT_ID, AGG, 3, owner_);
     }
@@ -56,11 +61,35 @@ contract QuiltedCollectionTest is MiniTest {
         new QuiltedCollection("D", "D", QUILT_ID, AGG, 0, owner_);
     }
 
+    function test_constructor_revertsOnAggregatorTrailingSlash() public {
+        vm.expectRevert(bytes("QuiltedCollection: aggregator must not end with /"));
+        new QuiltedCollection(
+            "D",
+            "D",
+            QUILT_ID,
+            "https://aggregator.walrus-testnet.walrus.space/",
+            1,
+            owner_
+        );
+    }
+
     function test_mint_assignsSequentialIdsAndEmits() public {
+        // MiniERC721._safeMint emits Transfer(address(0), to, tokenId) before
+        // QuiltedCollection.mint emits Minted(tokenId, to). Pin both.
+        vm.expectEmit(true, true, true, false);
+        emit Transfer(address(0), alice, 1);
+        vm.expectEmit(true, true, false, false);
+        emit Minted(1, alice);
         vm.prank(alice);
         uint256 id1 = c.mint();
+
+        vm.expectEmit(true, true, true, false);
+        emit Transfer(address(0), alice, 2);
+        vm.expectEmit(true, true, false, false);
+        emit Minted(2, alice);
         vm.prank(alice);
         uint256 id2 = c.mint();
+
         assertEq(id1, 1);
         assertEq(id2, 2);
         assertEqAddress(c.ownerOf(1), alice);
@@ -98,6 +127,8 @@ contract QuiltedCollectionTest is MiniTest {
         uint256 id = c.mint();
 
         string memory newAgg = "https://aggregator.walrus.example";
+        vm.expectEmit(false, false, false, true);
+        emit AggregatorUpdated(AGG, newAgg);
         vm.prank(owner_);
         c.setAggregator(newAgg);
 
@@ -118,5 +149,11 @@ contract QuiltedCollectionTest is MiniTest {
         vm.prank(owner_);
         vm.expectRevert(bytes("QuiltedCollection: empty aggregator"));
         c.setAggregator("");
+    }
+
+    function test_setAggregator_revertsOnTrailingSlash() public {
+        vm.prank(owner_);
+        vm.expectRevert(bytes("QuiltedCollection: aggregator must not end with /"));
+        c.setAggregator("https://aggregator.walrus.example/");
     }
 }

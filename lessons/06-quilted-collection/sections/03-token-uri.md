@@ -60,12 +60,9 @@ The trade-off you make to get all of this: per-token metadata is fixed at quilt-
 
 ## Verification
 
-Run `forge build` — the contract should now compile cleanly. `forge test` will still fail for the `setAggregator`-dependent tests because that function lands in Section 4.
+Run `forge build` — the contract should now compile cleanly. `forge test` will fail at the **compile** step (not the run step), because the test file references `c.setAggregator(...)` in three functions and that method lands in Section 4. Solidity compiles `test/QuiltedCollection.t.sol` as a unit, so the whole file fails to compile until Section 4 ships `setAggregator`.
 
-To verify the URL-shape part specifically, run:
+Two `tokenURI` tests are queued for the final equivalence gate at Section 4:
 
-```bash
-forge test --match-test test_tokenURI -vv
-```
-
-Two tests should pass — `test_tokenURI_buildsExpectedAggregatorURL` and `test_tokenURI_revertsForUnmintedToken`.
+- `test_tokenURI_buildsExpectedAggregatorURL`
+- `test_tokenURI_revertsForUnmintedToken`

@@ -30,7 +30,7 @@ substitutes — covering:
    shutdown). The quilt itself is content-addressed, so only the URL
    prefix changes.
 
-The reference-app's Foundry test suite (10 tests) is the equivalence gate
+The reference-app's Foundry test suite (12 tests) is the equivalence gate
 — constructor validation, sequential mint ids, sold-out cap, URL shape,
 unminted-token revert, owner-only setter, and the aggregator-migration
 flow.

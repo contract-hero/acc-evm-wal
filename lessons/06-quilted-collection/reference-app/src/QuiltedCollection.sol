@@ -58,7 +58,7 @@ contract QuiltedCollection is MiniERC721, MiniOwnable {
         address initialOwner
     ) MiniERC721(name_, symbol_) MiniOwnable(initialOwner) {
         require(bytes(quiltId_).length > 0, "QuiltedCollection: empty quiltId");
-        require(bytes(aggregator_).length > 0, "QuiltedCollection: empty aggregator");
+        _validateAggregator(bytes(aggregator_));
         require(maxSupply_ > 0, "QuiltedCollection: zero maxSupply");
         quiltId = quiltId_;
         aggregator = aggregator_;
@@ -82,9 +82,18 @@ contract QuiltedCollection is MiniERC721, MiniOwnable {
     /// the original host sunsets or testnet→mainnet migration). The quilt
     /// itself is content-addressed; only the resolver URL prefix changes.
     function setAggregator(string calldata newAggregator) external onlyOwner {
-        require(bytes(newAggregator).length > 0, "QuiltedCollection: empty aggregator");
+        _validateAggregator(bytes(newAggregator));
         emit AggregatorUpdated(aggregator, newAggregator);
         aggregator = newAggregator;
+    }
+
+    /// @dev Aggregator URL must be non-empty AND must NOT end in `/` — `tokenURI`
+    /// concats `aggregator + "/v1/blobs/..."` and a trailing slash would produce
+    /// `//` in every token URL, which strict CDNs reject and most marketplaces
+    /// render as broken metadata.
+    function _validateAggregator(bytes memory aggBytes) private pure {
+        require(aggBytes.length > 0, "QuiltedCollection: empty aggregator");
+        require(aggBytes[aggBytes.length - 1] != 0x2f, "QuiltedCollection: aggregator must not end with /");
     }
 
     /// @notice Resolve token id to its Walrus-quilt-backed metadata URL.

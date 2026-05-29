@@ -41,7 +41,7 @@ export function validatePublishOpts(opts: PublishOpts): ValidatedPublishOpts {
     throw new Error("siteDir is required");
   }
 
-  if (!SITE_NAME_PATTERN.test(opts.siteName)) {
+  if (typeof opts.siteName !== "string" || !SITE_NAME_PATTERN.test(opts.siteName)) {
     throw new Error(
       `siteName must match ${SITE_NAME_PATTERN} (got: '${opts.siteName}')`,
     );

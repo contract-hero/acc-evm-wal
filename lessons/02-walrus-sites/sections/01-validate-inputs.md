@@ -27,4 +27,4 @@ Restricting to `[A-Za-z0-9._-]{1,64}` is what makes each stage of that pipeline 
 
 ## Verification
 
-Run `pnpm vitest run tests/publish.test.ts -t validatePublishOpts` from your workspace. All eight `validatePublishOpts` tests should pass. The `buildPublishArgs` and `parseSiteObjectId` tests will still fail — that's expected; you haven't written those functions yet.
+Run `pnpm vitest run tests/publish.test.ts -t validatePublishOpts` from your workspace. All nine `validatePublishOpts` tests should pass. The `buildPublishArgs` and `parseSiteObjectId` tests will still fail — that's expected; you haven't written those functions yet.

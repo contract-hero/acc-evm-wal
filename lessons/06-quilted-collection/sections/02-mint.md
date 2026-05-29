@@ -63,7 +63,7 @@ The off-by-one risk is exactly the kind of thing the test suite pins:
 - `test_mint_assignsSequentialIdsAndEmits` verifies the first two mints have ids `1` and `2` (catches pre-increment).
 - `test_mint_capsAtMaxSupply` mints exactly `maxSupply` (= 3 in the test setup) successfully and the 4th reverts (catches `<` vs `<=`).
 
-There's a small bonus property here: **the gate is at the function's top, before `_safeMint`'s effects.** If the test caller ran out of gas inside `_safeMint`'s reentrant `onERC721Received` hook, the gate would still have fired first and the state would be consistent. Checks-Effects-Interactions in spirit.
+There's a small bonus property here: **the cap check is the function's first line, before `_safeMint` touches storage.** The vendored `MiniERC721` in this workspace is a stripped-down stand-in — its `_safeMint` only writes the owner mapping, bumps the balance, and emits `Transfer`. (It deliberately does NOT call `IERC721Receiver.onERC721Received`; production code should pair the production OZ `_safeMint` with a real receiver callback when minting to contracts. See `src/lib/MiniERC721.sol` for the scope of the substitute.)
 
 ## Verification
 

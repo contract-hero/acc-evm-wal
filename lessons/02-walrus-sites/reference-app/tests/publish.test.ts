@@ -52,6 +52,13 @@ describe("validatePublishOpts", () => {
     ).toThrow(/siteName must match/);
   });
 
+  it("rejects undefined siteName (no coercion to 'undefined' string)", () => {
+    expect(() =>
+      // @ts-expect-error — intentional missing field
+      validatePublishOpts({ siteDir: "./out" }),
+    ).toThrow(/siteName must match/);
+  });
+
   it("rejects non-integer epochs", () => {
     expect(() =>
       validatePublishOpts({ siteDir: "./out", siteName: "ok", epochs: 1.5 }),

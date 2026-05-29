@@ -9,6 +9,7 @@ import {Governance, IERC20} from "../src/Governance.sol";
 interface Vm {
     function prank(address sender) external;
     function expectRevert(bytes calldata revertData) external;
+    function expectEmit(bool checkTopic1, bool checkTopic2, bool checkTopic3, bool checkData) external;
     function warp(uint256 newTimestamp) external;
 }
 
@@ -57,6 +58,9 @@ contract GovernanceTest is MiniTest {
 
     bytes32 internal blob = bytes32(uint256(0xB10B));
 
+    event Proposed(uint256 indexed id, address indexed proposer, bytes32 blobId, uint64 deadline);
+    event Voted(uint256 indexed id, address indexed voter, bool support, uint256 weight);
+
     function setUp() public {
         token = new MockVoteToken();
         gov = new Governance(IERC20(address(token)));
@@ -67,6 +71,10 @@ contract GovernanceTest is MiniTest {
 
     function test_propose_storesProposalAndEmits() public {
         uint64 deadline = uint64(block.timestamp + 1 days);
+
+        vm.expectEmit(true, true, false, true);
+        emit Proposed(1, proposer, blob, deadline);
+
         vm.prank(proposer);
         uint256 id = gov.propose(blob, deadline);
         assertEq(id, 1);
@@ -118,10 +126,16 @@ contract GovernanceTest is MiniTest {
     function test_vote_addsWeightedTally() public {
         uint256 id = gov.propose(blob, uint64(block.timestamp + 1 days));
 
+        vm.expectEmit(true, true, false, true);
+        emit Voted(id, alice, true, 100 ether);
         vm.prank(alice);
         gov.vote(id, true);
+
+        vm.expectEmit(true, true, false, true);
+        emit Voted(id, bob, false, 200 ether);
         vm.prank(bob);
         gov.vote(id, false);
+
         vm.prank(carol);
         gov.vote(id, true);
 

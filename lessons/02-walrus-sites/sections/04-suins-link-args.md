@@ -25,9 +25,9 @@ In this section you'll write:
 Why this matters:
 
 - **No `@mysten/sui` dependency in the lesson.** The transactions builder is the right tool when you're about to sign and submit, but the *shape* of the call (target string + ordered args) is what every caller eventually needs to assemble. Returning the shape as a plain object means the unit test asserts on `call.target` and `call.args` directly — no need to spin up a `Transaction` instance just to inspect it.
-- **Two valid call paths, one shape.** Programmatic callers will do `Transaction.moveCall({ target, arguments: args.map(tx.object) })`. Operators will paste the same target + args into `sui client call --package <pkg> --module controller --function set_target_walrus_site --args <name-reg> <site>`. The data form serves both without choosing for them.
+- **Two valid call paths, one shape.** Programmatic callers feed the payload into a `Transaction` instance with `tx.moveCall({ target, arguments: args.map((id) => tx.object(id)) })`. Operators paste the same target + args into `sui client call --package <pkg> --module controller --function set_target_walrus_site --args <name-reg> <site>`. The data form serves both without choosing for them.
 - **The arg ORDER is a Move-side ABI invariant.** `set_target_walrus_site` expects the registration first, the site second. Encoding that as a tuple type `readonly [string, string]` rather than an object means TypeScript will catch the swap at compile time if a future refactor changes the field names.
 
 ## Verification
 
-Run `pnpm vitest run` from your workspace. All 20 tests across both suites should pass. This is also the lesson's final equivalence gate.
+Run `pnpm vitest run` from your workspace. All 22 tests across both suites should pass. This is also the lesson's final equivalence gate.

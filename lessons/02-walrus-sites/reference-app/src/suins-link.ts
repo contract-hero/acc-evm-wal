@@ -61,6 +61,9 @@ export function buildSetWalrusSiteCall(opts: SuinsLinkOpts): MoveCallPayload {
   }
 
   const pkg = opts.suinsPackageId ?? SUINS_PACKAGE_IDS[opts.network];
+  if (!OBJECT_ID_PATTERN.test(pkg)) {
+    throw new Error(`suinsPackageId is not a Sui object id: '${pkg}'`);
+  }
 
   return {
     target: `${pkg}::controller::set_target_walrus_site`,

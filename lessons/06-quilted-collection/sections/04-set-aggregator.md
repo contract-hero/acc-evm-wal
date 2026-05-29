@@ -45,11 +45,12 @@ Some collections add a second knob — `setRoyaltyRecipient`, `setBaseURI`, etc.
 
 ## Verification
 
-Run `forge test -vv` from your workspace. All **10 tests** should pass — this is the lesson's final equivalence gate:
+Run `forge test -vv` from your workspace. All **12 tests** should pass — this is the lesson's final equivalence gate:
 
 ```
 test_constructor_revertsOnEmptyQuiltId
 test_constructor_revertsOnEmptyAggregator
+test_constructor_revertsOnAggregatorTrailingSlash
 test_constructor_revertsOnZeroMaxSupply
 test_mint_assignsSequentialIdsAndEmits
 test_mint_capsAtMaxSupply
@@ -58,6 +59,7 @@ test_tokenURI_revertsForUnmintedToken
 test_setAggregator_ownerCanMigrateAggregator
 test_setAggregator_revertsForNonOwner
 test_setAggregator_revertsOnEmpty
+test_setAggregator_revertsOnTrailingSlash
 ```
 
 The `test_setAggregator_ownerCanMigrateAggregator` test is the punchline: it mints token #1, then changes the aggregator, then re-reads `tokenURI(1)` and confirms the same token's URL now serves through the new host. That's the property the whole `setAggregator` function exists for.
