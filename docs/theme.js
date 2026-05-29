@@ -1,43 +1,48 @@
-// Palette toggle — three-state: system (no override) → light → dark → system.
-// Reads localStorage `acc-evm-wal-theme` if set; otherwise honors
-// prefers-color-scheme via the CSS @media query (no `data-theme` attribute).
+// Two-state palette toggle (light ↔ dark). System preference is the
+// auto-derived first-paint default and stays in sync until the reader
+// overrides via the toggle; once stored in localStorage, the override
+// is what wins on every subsequent visit.
 
 (function () {
   const STORAGE_KEY = "acc-evm-wal-theme";
   const root = document.documentElement;
+  const mql = window.matchMedia("(prefers-color-scheme: dark)");
 
-  function apply(theme) {
-    if (theme === "light" || theme === "dark") {
-      root.setAttribute("data-theme", theme);
-    } else {
-      root.removeAttribute("data-theme");
+  function readStored() {
+    try {
+      return localStorage.getItem(STORAGE_KEY);
+    } catch (_) {
+      return null;
     }
   }
-
-  // 1. Apply stored preference on first paint (script is in <head>, before body).
-  try {
-    apply(localStorage.getItem(STORAGE_KEY));
-  } catch (_) {
-    /* localStorage disabled — fall through to prefers-color-scheme. */
+  function writeStored(theme) {
+    try {
+      localStorage.setItem(STORAGE_KEY, theme);
+    } catch (_) {
+      /* private mode — silently fall through */
+    }
+  }
+  function apply(theme) {
+    root.setAttribute("data-theme", theme);
   }
 
-  // 2. Wire the toggle once the DOM is ready.
+  // Resolve the active theme on first paint — script is in <head> before
+  // <body>, so this runs before the browser commits any pixels.
+  apply(readStored() || (mql.matches ? "dark" : "light"));
+
+  // Stay in sync with system changes ONLY while the reader hasn't overridden.
+  mql.addEventListener("change", function (e) {
+    if (!readStored()) apply(e.matches ? "dark" : "light");
+  });
+
+  // Wire the toggle once the body has parsed.
   document.addEventListener("DOMContentLoaded", function () {
     const btn = document.querySelector(".theme-toggle");
     if (!btn) return;
     btn.addEventListener("click", function () {
-      const current = root.getAttribute("data-theme");
-      const next = current === "dark" ? "light" : current === "light" ? null : "dark";
+      const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
       apply(next);
-      try {
-        if (next) {
-          localStorage.setItem(STORAGE_KEY, next);
-        } else {
-          localStorage.removeItem(STORAGE_KEY);
-        }
-      } catch (_) {
-        /* ignore */
-      }
+      writeStored(next);
     });
   });
 })();

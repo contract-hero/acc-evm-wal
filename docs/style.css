@@ -62,32 +62,9 @@
   --shadow-card-hover: 0 6px 16px rgba(77, 162, 255, 0.06);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) {
-    color-scheme: dark;
-    --bg: #07080b;
-    --bg-soft: #0d1015;
-    --surface: #11151b;
-    --surface-elev: #161b22;
-    --line: #1f2630;
-    --line-soft: #161c25;
-    --text: #e6edf3;
-    --text-soft: #9aa6b2;
-    --text-dim: #5e6a78;
-    --accent: #4da2ff;
-    --accent-strong: #6db5ff;
-    --accent-soft: rgba(77, 162, 255, 0.12);
-    --accent-line: rgba(77, 162, 255, 0.35);
-    --code-bg: #0b0e13;
-    --warn: #f0b429;
-    --warn-soft: rgba(240, 180, 41, 0.1);
-    --good: #4ade80;
-    --good-soft: rgba(74, 222, 128, 0.1);
-    --bad: #f87171;
-    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35);
-    --shadow-card-hover: 0 6px 16px rgba(77, 162, 255, 0.06);
-  }
-}
+/* `data-theme` is always set on first paint by theme.js (resolves system →
+   light|dark via matchMedia), so the CSS only needs the two explicit
+   palette blocks above — no `@media (prefers-color-scheme: ...)` mirror. */
 
 /* ─── reset + base ────────────────────────────────────────────────── */
 
@@ -126,7 +103,6 @@ header.site {
   position: sticky;
   top: 0;
   z-index: 20;
-  backdrop-filter: blur(8px);
 }
 header.site .wrap {
   display: flex;
@@ -185,16 +161,10 @@ button.theme-toggle:hover {
   color: var(--accent);
 }
 button.theme-toggle svg { width: 16px; height: 16px; }
-:root[data-theme="dark"] button.theme-toggle .icon-sun,
-:root:not([data-theme]) button.theme-toggle .icon-sun { display: inline; }
+/* Icon visibility tracks the active palette — dark theme shows the sun
+   (click to go light), light theme shows the moon (click to go dark). */
 :root[data-theme="dark"] button.theme-toggle .icon-moon,
-:root:not([data-theme]) button.theme-toggle .icon-moon { display: none; }
 :root[data-theme="light"] button.theme-toggle .icon-sun { display: none; }
-:root[data-theme="light"] button.theme-toggle .icon-moon { display: inline; }
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme]) button.theme-toggle .icon-sun { display: none; }
-  :root:not([data-theme]) button.theme-toggle .icon-moon { display: inline; }
-}
 
 /* ─── sections ────────────────────────────────────────────────────── */
 
@@ -277,11 +247,9 @@ h1 em {
   background: var(--accent-strong);
   color: #fff;
 }
-:root[data-theme="dark"] .btn-primary { color: #07080b; font-weight: 600; }
-:root:not([data-theme]) .btn-primary { color: #fff; }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) .btn-primary { color: #07080b; font-weight: 600; }
-}
+/* Dark theme's Sui-blue accent is too bright for white text; flip to ink. */
+:root[data-theme="dark"] .btn-primary,
+:root[data-theme="dark"] .btn-primary:hover { color: #07080b; font-weight: 600; }
 .btn-secondary {
   background: transparent;
   color: var(--accent);
@@ -634,6 +602,21 @@ footer.site a:hover { border-bottom: 1px solid var(--accent); }
 
 /* ─── flow diagram (landing) — SVG class hooks ────────────────────── */
 
+.diagram {
+  margin: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 22px;
+}
+.diagram figcaption {
+  color: var(--text-soft);
+  font-size: 14px;
+  margin-top: 14px;
+  text-align: center;
+}
+.flow-svg { width: 100%; height: auto; display: block; }
+.flow-svg text { font-family: var(--sans); text-anchor: middle; }
 .flow-svg .box { fill: var(--surface); stroke: var(--line); stroke-width: 1; }
 .flow-svg .box-accent { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1; }
 .flow-svg .box-outline-accent { fill: var(--surface); stroke: var(--accent); stroke-width: 1; }
@@ -645,7 +628,10 @@ footer.site a:hover { border-bottom: 1px solid var(--accent); }
 .flow-svg .t-soft { fill: var(--text-soft); }
 .flow-svg .t-accent { fill: var(--accent); }
 .flow-svg .t-good { fill: var(--good); }
-.flow-svg figcaption { color: var(--text-soft); }
+.flow-svg .t-mono { font-family: var(--mono); }
+
+/* Lesson "Sources" lists override the 2-column .build-list to stack. */
+.build-list--stacked { grid-template-columns: 1fr; gap: 12px; }
 
 /* ─── small viewports ────────────────────────────────────────────── */
 
