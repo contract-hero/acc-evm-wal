@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "sections": [
+    {
+      "id": "s01-storage-and-constructor",
+      "title": "Storage + constructor (and why `quiltId` isn't immutable)",
+      "body_md": "sections/01-storage-and-constructor.md",
+      "key_moment": "Solidity does not allow `immutable` on `string` (or any dynamic-size type) — `quiltId` and `aggregator` are plain storage variables, conventionally written-once by the constructor. The CONVENTION (vs. the language) is what guarantees immutability of `quiltId`; the absence of any setter is the proof. For `aggregator`, the deliberate `setAggregator` setter exists as a sunset knob — the language can't help you here, the design intent is the contract.",
+      "expected_files": ["src/QuiltedCollection.sol"],
+      "artifact_section_id": "s01-storage-and-constructor"
+    },
+    {
+      "id": "s02-mint",
+      "title": "Self-mint with sequential ids + maxSupply cap",
+      "body_md": "sections/02-mint.md",
+      "key_moment": "`tokenId = _nextTokenId++;` (post-increment) — the local `tokenId` gets the CURRENT value (1 on first mint), then storage gets bumped to 2 for the next call. Pre-increment would skip id `1` and start at `2`. Combined with the `<=` cap (not `<`), this produces a half-open-then-closed window that mints exactly `[1, maxSupply]` and rejects the (maxSupply+1)-th call. One character matters in both places.",
+      "expected_files": ["src/QuiltedCollection.sol"],
+      "artifact_section_id": "s02-mint"
+    },
+    {
+      "id": "s03-token-uri",
+      "title": "`tokenURI` — building the deterministic aggregator URL",
+      "body_md": "sections/03-token-uri.md",
+      "key_moment": "`tokenURI` is a PURE STRING-CONCAT — no SLOAD other than the two storage strings, no mapping lookup, no per-token state. The url shape `<aggregator>/v1/blobs/by-quilt-id/<quiltId>/<tokenId>.json` is uniform across every token; the only thing that differs per token is the decimal id. That's what collapses 10 000 token URIs into TWO storage strings + a one-line view function — and what makes off-chain URL derivation possible without any RPC at all.",
+      "expected_files": ["src/QuiltedCollection.sol"],
+      "artifact_section_id": "s03-token-uri"
+    },
+    {
+      "id": "s04-set-aggregator",
+      "title": "`setAggregator` — the sunset-migration knob",
+      "body_md": "sections/04-set-aggregator.md",
+      "key_moment": "`setAggregator` is owner-only and the ONLY mutable storage slot after deployment. The reason it exists at all: Walrus aggregator hosts are commodity HTTPS endpoints, and any specific host might sunset. Because Walrus blobs are content-addressed, pointing at a different aggregator returns the SAME bytes — only the URL prefix changes. The migration is one transaction, costs no re-pinning, and surfaces as an `AggregatorUpdated` event for indexers to follow.",
+      "expected_files": ["src/QuiltedCollection.sol"],
+      "artifact_section_id": "s04-set-aggregator"
+    }
+  ],
+  "final_verification": {
+    "mode": "test-suite",
+    "command": "forge test"
+  }
+}

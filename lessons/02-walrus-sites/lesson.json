@@ -1,0 +1,19 @@
+{
+  "slug": "02-walrus-sites",
+  "title": "Walrus Sites — Publishing Frontends as Sui Objects",
+  "summary": "Port `publish.sh` to TypeScript: validate publish inputs, build the `site-builder` argv, parse the site_object_id out of stdout, then construct the SuiNS link Move call that points a name at the new site. Replaces the IPNS + Cloudflare gateway stack with one Sui object and one SuiNS transaction.",
+  "personalization_options": [],
+  "build_command": "pnpm install",
+  "test_command": "pnpm vitest run",
+  "prerequisites": ["pnpm-installed"],
+  "workspace": {
+    "host": "reference-app",
+    "host_install_command": "pnpm install",
+    "verification_cwd": ".",
+    "files": []
+  },
+  "artifact": {
+    "template": "artifact/template.html",
+    "state_filename": "artifact-state.json"
+  }
+}

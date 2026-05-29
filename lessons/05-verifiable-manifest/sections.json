@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "sections": [
+    {
+      "id": "s01-encoding-helpers",
+      "title": "Encoding helpers — bytes32 → base64url and bytes8 → ASCII",
+      "body_md": "sections/01-encoding-helpers.md",
+      "key_moment": "base64url is NOT base64. The aggregator URL must use `-` instead of `+`, `_` instead of `/`, and DROP the `=` padding. `btoa()` produces standard base64; getting the substitutions wrong by one character returns 404 silently — the aggregator interprets the wrong slug as an unknown blob, not as a malformed request.",
+      "expected_files": ["src/encoding.ts"],
+      "artifact_section_id": "s01-encoding-helpers"
+    },
+    {
+      "id": "s02-onchain-read",
+      "title": "The on-chain read — viem PublicClient + ABI",
+      "body_md": "sections/02-onchain-read.md",
+      "key_moment": "Declaring `WALRUS_RESOLVER_ABI as const` (a `const` assertion) is what makes viem type-check the return shape. Without `as const`, the ABI is widened to `any[]` and `readContract` returns `unknown` — the destructuring `[blobId, , contentTypeRaw]` would silently lose type safety. The `as const` is load-bearing TypeScript, not aesthetic style.",
+      "expected_files": ["src/manifest.ts"],
+      "artifact_section_id": "s02-onchain-read"
+    },
+    {
+      "id": "s03-aggregator-fetch",
+      "title": "Aggregator GET + content-type gating",
+      "body_md": "sections/03-aggregator-fetch.md",
+      "key_moment": "The `contentType.startsWith(\"app/json\")` check before the fetch is what prevents a misconfigured pointer (say, one that points at a PNG) from being parsed as JSON downstream. The `bytes8` on-chain field is intentionally a shortcode grammar (\"app/json\", \"text/md\", \"image/p\"), not a full MIME — long MIMEs like \"application/json\" don't fit eight bytes, which the resolver contract designed in. The client mirrors the design by accepting the shortcode form ONLY.",
+      "expected_files": ["src/manifest.ts"],
+      "artifact_section_id": "s03-aggregator-fetch"
+    },
+    {
+      "id": "s04-generic-and-typed-wrapper",
+      "title": "Generic resolveManifest + typed convenience wrapper",
+      "body_md": "sections/04-generic-and-typed-wrapper.md",
+      "key_moment": "`resolveTokenList = (name, opts) => resolveManifest<UniswapTokenList>(name, opts)` — the curried specialization is one line and zero runtime overhead. The TYPE narrows at the call site; the implementation stays generic over any JSON shape. This is the cheapest possible 'typed API surface' in TypeScript and it scales to any number of well-known manifest shapes without forcing every caller to specify `<T>` inline.",
+      "expected_files": ["src/manifest.ts"],
+      "artifact_section_id": "s04-generic-and-typed-wrapper"
+    }
+  ],
+  "final_verification": {
+    "mode": "test-suite",
+    "command": "pnpm vitest run"
+  }
+}

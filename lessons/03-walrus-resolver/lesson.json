@@ -1,0 +1,19 @@
+{
+  "slug": "03-walrus-resolver",
+  "title": "WalrusResolver — An IPNS Replacement on ENS",
+  "summary": "Build a Solidity contract that lets an ENS name's owner park a Walrus blob pointer on-chain. Authorization piggybacks on the ENS registry's owner/operator model, the pointer carries both the content address and the underlying Sui Blob object id (so a permissionless keeper can extend it), and reads cost one EVM `eth_call`. Replaces a DHT round-trip with a single SLOAD.",
+  "personalization_options": [],
+  "build_command": "forge build",
+  "test_command": "forge test",
+  "prerequisites": ["foundry-installed"],
+  "workspace": {
+    "host": "reference-app",
+    "host_install_command": "forge build",
+    "verification_cwd": ".",
+    "files": []
+  },
+  "artifact": {
+    "template": "artifact/template.html",
+    "state_filename": "artifact-state.json"
+  }
+}

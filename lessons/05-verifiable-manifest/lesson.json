@@ -1,0 +1,19 @@
+{
+  "slug": "05-verifiable-manifest",
+  "title": "Verifiable Manifest Client — ENS → Walrus, in One TypeScript Call",
+  "summary": "Build the off-chain side of the WalrusResolver pattern: an ENS name in, a typed JSON manifest out. One eth_call to the resolver, one HTTP GET to the aggregator, no IPNS round-trip in between. Generic over the manifest shape so the same function serves Uniswap token lists, dApp configs, and DAO metadata.",
+  "personalization_options": [],
+  "build_command": "pnpm install",
+  "test_command": "pnpm vitest run",
+  "prerequisites": ["pnpm-installed"],
+  "workspace": {
+    "host": "reference-app",
+    "host_install_command": "pnpm install",
+    "verification_cwd": ".",
+    "files": []
+  },
+  "artifact": {
+    "template": "artifact/template.html",
+    "state_filename": "artifact-state.json"
+  }
+}

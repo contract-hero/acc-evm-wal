@@ -1,0 +1,5 @@
+node_modules/
+.vitest-temp/
+*.log
+.env
+.env.local

@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Verifiable Manifest — ACC artifact</title>
+<style>
+  :root {
+    --bg: #0e1117;
+    --panel: #161b22;
+    --panel-2: #1f242d;
+    --border: #2a313c;
+    --fg: #d5d9e0;
+    --muted: #8b94a7;
+    --accent: #79b8ff;
+    --accent-2: #7ad9bf;
+    --good: #6dd56d;
+    --warn: #e6c07b;
+    --bad: #e08585;
+    --code-bg: #0b0e13;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    background: var(--bg);
+    color: var(--fg);
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  body { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+  h1 { font-size: 1.6rem; margin: 0 0 .25rem; }
+  h2 { font-size: 1.15rem; margin: 2rem 0 .6rem; padding-bottom: .3rem; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 1.0rem; margin: 1.2rem 0 .4rem; color: var(--accent-2); }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; color: #f0f3f7; }
+  pre { background: var(--code-bg); padding: .9rem 1rem; border-radius: 6px; overflow-x: auto; line-height: 1.45; }
+  pre code { background: transparent; padding: 0; }
+  .lede { color: var(--muted); }
+  section.acc-section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity .4s ease, transform .4s ease;
+    pointer-events: none;
+    height: 0;
+    overflow: hidden;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin: 0;
+  }
+  section.acc-section[data-visible="true"] {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    height: auto;
+    padding: 1.2rem 1.4rem;
+    margin: 1rem 0;
+  }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; background: var(--panel-2); color: var(--accent); margin-right: .5rem; }
+  table.subs { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  table.subs td, table.subs th { padding: .35rem .6rem; border-bottom: 1px solid var(--border); text-align: left; }
+  table.subs th { color: var(--muted); font-weight: 500; }
+  table.subs code { font-size: .9rem; }
+  svg { max-width: 100%; height: auto; display: block; margin: .6rem 0; }
+  .legend { font-size: .8rem; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<h1>Verifiable Manifest Client — ENS → Walrus, in One TS Call</h1>
+<p class="lede" id="acc-progress">Lesson loading…</p>
+
+<!-- ============================================================ -->
+<!-- Section 1: encoding helpers                                   -->
+<!-- ============================================================ -->
+<section class="acc-section" data-section-id="s01-encoding-helpers">
+  <h2><span class="badge">Section 1</span> Encoding helpers — bytes32 → base64url, bytes8 → ASCII</h2>
+
+  <p>Two pure functions that bridge tight on-chain types to loose off-chain forms. The substitution table is the load-bearing detail.</p>
+
+  <h3>base64 → base64url substitutions</h3>
+  <table class="subs">
+    <thead><tr><th>base64</th><th>base64url</th><th>why</th></tr></thead>
+    <tbody>
+      <tr><td><code>+</code></td><td><code>-</code></td><td>URL-safe alphabet (RFC 4648 §5)</td></tr>
+      <tr><td><code>/</code></td><td><code>_</code></td><td>same</td></tr>
+      <tr><td><code>=</code> (padding)</td><td>dropped</td><td>length-implicit slug</td></tr>
+    </tbody>
+  </table>
+
+  <svg viewBox="0 0 700 220" role="img" aria-label="bytes32 → base64url pipeline">
+    <defs>
+      <marker id="arrM" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#8b94a7" />
+      </marker>
+    </defs>
+
+    <rect x="20" y="40" width="140" height="100" rx="8" fill="#1f242d" stroke="#79b8ff" />
+    <text x="90" y="68" text-anchor="middle" fill="#79b8ff" font-size="12" font-weight="600">bytes32</text>
+    <text x="90" y="92" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">0x0001…3031</text>
+    <text x="90" y="118" text-anchor="middle" fill="#8b94a7" font-size="10">32 raw bytes</text>
+
+    <rect x="190" y="40" width="160" height="100" rx="8" fill="#1f242d" stroke="#e6c07b" />
+    <text x="270" y="64" text-anchor="middle" fill="#e6c07b" font-size="12" font-weight="600">btoa(bytes)</text>
+    <text x="270" y="88" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">AA…+Q/Q==</text>
+    <text x="270" y="116" text-anchor="middle" fill="#8b94a7" font-size="10">standard base64</text>
+    <text x="270" y="130" text-anchor="middle" fill="#e08585" font-size="10">— not URL-safe</text>
+
+    <rect x="380" y="40" width="200" height="100" rx="8" fill="#1f242d" stroke="#7ad9bf" />
+    <text x="480" y="64" text-anchor="middle" fill="#7ad9bf" font-size="12" font-weight="600">substitutions</text>
+    <text x="480" y="86" text-anchor="middle" fill="#d5d9e0" font-size="10">+ → -</text>
+    <text x="480" y="102" text-anchor="middle" fill="#d5d9e0" font-size="10">/ → _</text>
+    <text x="480" y="118" text-anchor="middle" fill="#d5d9e0" font-size="10">drop =</text>
+
+    <rect x="610" y="40" width="70" height="100" rx="8" fill="#1f242d" stroke="#6dd56d" />
+    <text x="645" y="68" text-anchor="middle" fill="#6dd56d" font-size="12" font-weight="600">URL slug</text>
+    <text x="645" y="100" text-anchor="middle" fill="#d5d9e0" font-size="10" font-family="ui-monospace, monospace">AA…-Q_Q</text>
+
+    <line x1="160" y1="90" x2="188" y2="90" stroke="#79b8ff" stroke-width="2" marker-end="url(#arrM)" />
+    <line x1="350" y1="90" x2="378" y2="90" stroke="#79b8ff" stroke-width="2" marker-end="url(#arrM)" />
+    <line x1="580" y1="90" x2="608" y2="90" stroke="#79b8ff" stroke-width="2" marker-end="url(#arrM)" />
+
+    <text x="350" y="178" text-anchor="middle" fill="#8b94a7" font-size="10">Get any substitution wrong by one character → silent 404 from the aggregator.</text>
+  </svg>
+
+  <p class="legend"><code>asciiTrim(bytes8)</code> is the parallel helper for the content-type field: trims at the first null byte so "text/md\0" returns the clean string "text/md" rather than "text/md\0".</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- Section 2: on-chain read                                      -->
+<!-- ============================================================ -->
+<section class="acc-section" data-section-id="s02-onchain-read">
+  <h2><span class="badge">Section 2</span> The on-chain read — viem PublicClient + ABI</h2>
+
+  <p>One <code>eth_call</code> against the resolver contract from lesson 03. The <code>as const</code> is what makes the return type inference work.</p>
+
+  <svg viewBox="0 0 700 260" role="img" aria-label="viem readContract flow">
+    <rect x="20" y="20" width="660" height="60" rx="8" fill="#1f242d" stroke="#79b8ff" />
+    <text x="350" y="44" text-anchor="middle" fill="#79b8ff" font-size="13" font-weight="600">readPointer({ rpcUrl, resolverAddress, node })</text>
+    <text x="350" y="64" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">node = namehash("tokens.demo.eth")</text>
+
+    <rect x="20" y="100" width="200" height="140" rx="8" fill="#1f242d" stroke="#e6c07b" />
+    <text x="120" y="126" text-anchor="middle" fill="#e6c07b" font-size="12" font-weight="600">PublicClient</text>
+    <text x="120" y="150" text-anchor="middle" fill="#d5d9e0" font-size="10">createPublicClient({</text>
+    <text x="120" y="166" text-anchor="middle" fill="#d5d9e0" font-size="10">  chain: mainnet,</text>
+    <text x="120" y="182" text-anchor="middle" fill="#d5d9e0" font-size="10">  transport: http(rpcUrl),</text>
+    <text x="120" y="198" text-anchor="middle" fill="#d5d9e0" font-size="10">})</text>
+    <text x="120" y="220" text-anchor="middle" fill="#8b94a7" font-size="10">viem ≥ 2.21</text>
+
+    <rect x="240" y="100" width="200" height="140" rx="8" fill="#1f242d" stroke="#79b8ff" />
+    <text x="340" y="126" text-anchor="middle" fill="#79b8ff" font-size="12" font-weight="600">readContract</text>
+    <text x="340" y="150" text-anchor="middle" fill="#d5d9e0" font-size="10">address: resolverAddress</text>
+    <text x="340" y="166" text-anchor="middle" fill="#d5d9e0" font-size="10">abi: WALRUS_RESOLVER_ABI</text>
+    <text x="340" y="184" text-anchor="middle" fill="#e6c07b" font-size="11" font-weight="600">  as const ← load-bearing</text>
+    <text x="340" y="200" text-anchor="middle" fill="#d5d9e0" font-size="10">functionName: "walrusBlob"</text>
+    <text x="340" y="216" text-anchor="middle" fill="#d5d9e0" font-size="10">args: [node]</text>
+
+    <rect x="460" y="100" width="220" height="140" rx="8" fill="#1f242d" stroke="#6dd56d" />
+    <text x="570" y="126" text-anchor="middle" fill="#6dd56d" font-size="12" font-weight="600">ResolverTuple</text>
+    <text x="570" y="152" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">[blobId,</text>
+    <text x="570" y="168" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace"> suiObjectId,</text>
+    <text x="570" y="184" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace"> contentTypeRaw]</text>
+    <text x="570" y="210" text-anchor="middle" fill="#8b94a7" font-size="10">— typed at compile time</text>
+    <text x="570" y="224" text-anchor="middle" fill="#8b94a7" font-size="10">  thanks to `as const`</text>
+  </svg>
+
+  <p class="legend">Default uses viem against a real RPC. The <code>ReadPointer</code> interface lets tests inject a fake that returns a fixture tuple — no RPC needed.</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- Section 3: aggregator fetch                                   -->
+<!-- ============================================================ -->
+<section class="acc-section" data-section-id="s03-aggregator-fetch">
+  <h2><span class="badge">Section 3</span> Aggregator GET + content-type gating</h2>
+
+  <p>The fetch path. The <code>startsWith("app/json")</code> check before the network call is what turns a wrong-type pointer into a precise error instead of a downstream <code>JSON.parse</code> crash.</p>
+
+  <svg viewBox="0 0 700 280" role="img" aria-label="aggregator fetch + content-type gate">
+    <rect x="20" y="20" width="660" height="40" rx="8" fill="#1f242d" stroke="#79b8ff" />
+    <text x="350" y="44" text-anchor="middle" fill="#79b8ff" font-size="12" font-weight="600">contentType = asciiTrim(contentTypeRaw)</text>
+
+    <rect x="20" y="80" width="320" height="80" rx="8" fill="#1f242d" stroke="#e6c07b" />
+    <text x="180" y="106" text-anchor="middle" fill="#e6c07b" font-size="12" font-weight="600">gate: startsWith("app/json")?</text>
+    <text x="180" y="130" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">if (!ok) throw `unexpected contentType …`</text>
+    <text x="180" y="148" text-anchor="middle" fill="#8b94a7" font-size="10">— precise error names the wrong pointer</text>
+
+    <rect x="360" y="80" width="320" height="80" rx="8" fill="#1f242d" stroke="#79b8ff" />
+    <text x="520" y="106" text-anchor="middle" fill="#79b8ff" font-size="12" font-weight="600">URL = `${agg}/v1/blobs/${b64url(blobId)}`</text>
+    <text x="520" y="130" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">httpGet(URL)</text>
+    <text x="520" y="148" text-anchor="middle" fill="#8b94a7" font-size="10">— default: globalThis.fetch</text>
+
+    <rect x="20" y="180" width="200" height="80" rx="8" fill="#1f242d" stroke="#6dd56d" />
+    <text x="120" y="206" text-anchor="middle" fill="#6dd56d" font-size="12" font-weight="600">2xx → JSON.parse</text>
+    <text x="120" y="226" text-anchor="middle" fill="#d5d9e0" font-size="11">return manifest, blobId, contentType</text>
+    <text x="120" y="244" text-anchor="middle" fill="#8b94a7" font-size="10">happy path</text>
+
+    <rect x="240" y="180" width="200" height="80" rx="8" fill="#1f242d" stroke="#e08585" />
+    <text x="340" y="206" text-anchor="middle" fill="#e08585" font-size="12" font-weight="600">non-2xx</text>
+    <text x="340" y="226" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">throw `aggregator HTTP 404 …`</text>
+    <text x="340" y="244" text-anchor="middle" fill="#8b94a7" font-size="10">includes the URL</text>
+
+    <rect x="460" y="180" width="220" height="80" rx="8" fill="#1f242d" stroke="#e08585" />
+    <text x="570" y="206" text-anchor="middle" fill="#e08585" font-size="12" font-weight="600">malformed JSON</text>
+    <text x="570" y="226" text-anchor="middle" fill="#d5d9e0" font-size="11">throws SyntaxError (propagated)</text>
+    <text x="570" y="244" text-anchor="middle" fill="#8b94a7" font-size="10">a parse error survives the boundary</text>
+  </svg>
+
+  <p class="legend">Four failure modes covered with one early gate + one status check + one default-language-feature throw. No try/catch swallowing anything.</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- Section 4: generic + typed wrapper                            -->
+<!-- ============================================================ -->
+<section class="acc-section" data-section-id="s04-generic-and-typed-wrapper">
+  <h2><span class="badge">Section 4</span> Generic <code>resolveManifest&lt;T&gt;</code> + the typed wrapper</h2>
+
+  <p>One generic function, one-line typed wrappers. The cheapest possible "typed API surface" in TypeScript.</p>
+
+  <svg viewBox="0 0 700 260" role="img" aria-label="generic + typed wrapper composition">
+    <rect x="20" y="20" width="660" height="80" rx="8" fill="#1f242d" stroke="#79b8ff" />
+    <text x="350" y="46" text-anchor="middle" fill="#79b8ff" font-size="13" font-weight="600">resolveManifest&lt;T = unknown&gt;(ensName, opts) : Promise&lt;ResolvedManifest&lt;T&gt;&gt;</text>
+    <text x="350" y="70" text-anchor="middle" fill="#d5d9e0" font-size="11">Section 1 helpers + Section 2 read + Section 3 fetch</text>
+    <text x="350" y="88" text-anchor="middle" fill="#8b94a7" font-size="10">— shape-agnostic; runtime parses JSON, caller picks T</text>
+
+    <rect x="20" y="130" width="200" height="110" rx="8" fill="#1f242d" stroke="#7ad9bf" />
+    <text x="120" y="156" text-anchor="middle" fill="#7ad9bf" font-size="12" font-weight="600">resolveTokenList</text>
+    <text x="120" y="180" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">= resolveManifest</text>
+    <text x="120" y="196" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">  &lt;UniswapTokenList&gt;</text>
+    <text x="120" y="220" text-anchor="middle" fill="#8b94a7" font-size="10">one line; zero runtime cost</text>
+
+    <rect x="240" y="130" width="200" height="110" rx="8" fill="#1f242d" stroke="#7ad9bf" />
+    <text x="340" y="156" text-anchor="middle" fill="#7ad9bf" font-size="12" font-weight="600">resolveDappConfig</text>
+    <text x="340" y="180" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">= resolveManifest</text>
+    <text x="340" y="196" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">  &lt;DappConfig&gt;</text>
+    <text x="340" y="220" text-anchor="middle" fill="#8b94a7" font-size="10">(your code can add these)</text>
+
+    <rect x="460" y="130" width="220" height="110" rx="8" fill="#1f242d" stroke="#7ad9bf" />
+    <text x="570" y="156" text-anchor="middle" fill="#7ad9bf" font-size="12" font-weight="600">resolveDaoProfile</text>
+    <text x="570" y="180" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">= resolveManifest</text>
+    <text x="570" y="196" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">  &lt;DaoProfile&gt;</text>
+    <text x="570" y="220" text-anchor="middle" fill="#8b94a7" font-size="10">downstream wrappers welcome</text>
+  </svg>
+
+  <h3>The equivalence gate</h3>
+  <svg viewBox="0 0 700 100" role="img" aria-label="vitest gate">
+    <rect x="20" y="20" width="660" height="60" rx="8" fill="#1f242d" stroke="#6dd56d" />
+    <text x="350" y="46" text-anchor="middle" fill="#6dd56d" font-size="13" font-weight="600">pnpm vitest run — 15 tests across 2 suites</text>
+    <text x="350" y="68" text-anchor="middle" fill="#d5d9e0" font-size="11">encoding.test.ts (7) · manifest.test.ts (8)</text>
+  </svg>
+  <p class="legend">Green here means the full ENS → resolver → aggregator → typed manifest pipeline is functionally equivalent to the reference, exercised entirely offline via injected fakes.</p>
+</section>
+
+<!-- ACC_STATE -->
+
+<script>
+  function applyAccState(s) {
+    if (!s) return;
+    const revealed = new Set(s.revealed || []);
+    for (const sec of document.querySelectorAll('section.acc-section')) {
+      const id = sec.getAttribute('data-section-id');
+      sec.setAttribute('data-visible', revealed.has(id) ? 'true' : 'false');
+    }
+    const cur = (typeof s.cursor === 'number') ? s.cursor + 1 : 0;
+    const total = s.total_sections ?? 0;
+    const mode = s.mode ?? '?';
+    const progress = document.getElementById('acc-progress');
+    if (progress) progress.textContent = 'Section ' + cur + ' of ' + total + ' · output mode: ' + mode;
+  }
+  applyAccState(window.__ACC_STATE__);
+
+  (async function poll() {
+    let lastUpdate = window.__ACC_STATE__?.updated_at ?? '';
+    while (true) {
+      try {
+        const r = await fetch('./artifact-state.json?_=' + Date.now(), { cache: 'no-store' });
+        if (r.ok) {
+          const s = await r.json();
+          if (s.updated_at !== lastUpdate) {
+            lastUpdate = s.updated_at;
+            applyAccState(s);
+          }
+        }
+      } catch (e) {
+        /* swallow */
+      }
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+  })();
+</script>
+
+</body>
+</html>

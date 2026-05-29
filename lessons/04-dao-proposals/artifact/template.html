@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>DAO Proposals — ACC artifact</title>
+<style>
+  :root {
+    --bg: #0e1117;
+    --panel: #161b22;
+    --panel-2: #1f242d;
+    --border: #2a313c;
+    --fg: #d5d9e0;
+    --muted: #8b94a7;
+    --accent: #79b8ff;
+    --accent-2: #7ad9bf;
+    --good: #6dd56d;
+    --warn: #e6c07b;
+    --bad: #e08585;
+    --code-bg: #0b0e13;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    background: var(--bg);
+    color: var(--fg);
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  body { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+  h1 { font-size: 1.6rem; margin: 0 0 .25rem; }
+  h2 { font-size: 1.15rem; margin: 2rem 0 .6rem; padding-bottom: .3rem; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 1.0rem; margin: 1.2rem 0 .4rem; color: var(--accent-2); }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; color: #f0f3f7; }
+  pre { background: var(--code-bg); padding: .9rem 1rem; border-radius: 6px; overflow-x: auto; line-height: 1.45; }
+  pre code { background: transparent; padding: 0; }
+  .lede { color: var(--muted); }
+  section.acc-section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity .4s ease, transform .4s ease;
+    pointer-events: none;
+    height: 0;
+    overflow: hidden;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin: 0;
+  }
+  section.acc-section[data-visible="true"] {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    height: auto;
+    padding: 1.2rem 1.4rem;
+    margin: 1rem 0;
+  }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; background: var(--panel-2); color: var(--accent); margin-right: .5rem; }
+  .warn-banner { background: rgba(224, 133, 133, .12); border: 1px solid var(--bad); border-radius: 6px; padding: .6rem .9rem; color: var(--bad); font-size: .9rem; margin: .5rem 0; }
+  .grid { display: grid; gap: .8rem; grid-template-columns: 1fr 1fr; }
+  .grid > div { background: var(--panel-2); border: 1px solid var(--border); border-radius: 6px; padding: .8rem 1rem; }
+  .grid h4 { margin: 0 0 .4rem; font-size: .9rem; color: var(--accent); }
+  svg { max-width: 100%; height: auto; display: block; margin: .6rem 0; }
+  .legend { font-size: .8rem; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<h1>DAO Proposals — Walrus-Backed Bodies, On-Chain Tallies</h1>
+<p class="lede" id="acc-progress">Lesson loading…</p>
+
+<!-- ============================================================ -->
+<!-- Section 1: storage + propose                                  -->
+<!-- ============================================================ -->
+<section class="acc-section" data-section-id="s01-storage-and-propose">
+  <h2><span class="badge">Section 1</span> Proposal storage + the propose path</h2>
+
+  <p>The split between what lives on-chain and what lives on Walrus is the whole point of the showcase.</p>
+
+  <svg viewBox="0 0 700 280" role="img" aria-label="Walrus-anchored proposal split">
+    <defs>
+      <marker id="arrG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#8b94a7" />
+      </marker>
+    </defs>
+
+    <rect x="20" y="40" width="320" height="200" rx="8" fill="#1f242d" stroke="#79b8ff" />
+    <text x="180" y="64" text-anchor="middle" fill="#79b8ff" font-size="13" font-weight="600">on-chain (EVM)</text>
+    <text x="180" y="90" text-anchor="middle" fill="#d5d9e0" font-size="11">struct Proposal {</text>
+    <text x="180" y="108" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">  address proposer</text>
+    <text x="180" y="124" text-anchor="middle" fill="#7ad9bf" font-size="11" font-family="ui-monospace, monospace">  bytes32 blobId  ← Walrus pointer</text>
+    <text x="180" y="140" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">  uint64  deadline</text>
+    <text x="180" y="156" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">  uint128 yes</text>
+    <text x="180" y="172" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">  uint128 no</text>
+    <text x="180" y="188" text-anchor="middle" fill="#d5d9e0" font-size="11">}</text>
+    <text x="180" y="216" text-anchor="middle" fill="#8b94a7" font-size="10">~3 slots per proposal</text>
+
+    <rect x="380" y="40" width="300" height="200" rx="8" fill="#1f242d" stroke="#7ad9bf" />
+    <text x="530" y="64" text-anchor="middle" fill="#7ad9bf" font-size="13" font-weight="600">on Walrus</text>
+    <text x="530" y="92" text-anchor="middle" fill="#d5d9e0" font-size="11">proposal-body.md (markdown)</text>
+    <text x="530" y="110" text-anchor="middle" fill="#d5d9e0" font-size="11">— title</text>
+    <text x="530" y="126" text-anchor="middle" fill="#d5d9e0" font-size="11">— motivation</text>
+    <text x="530" y="142" text-anchor="middle" fill="#d5d9e0" font-size="11">— spec</text>
+    <text x="530" y="158" text-anchor="middle" fill="#d5d9e0" font-size="11">— rationale</text>
+    <text x="530" y="180" text-anchor="middle" fill="#8b94a7" font-size="10">PUT to publisher.walrus-testnet.walrus.space</text>
+    <text x="530" y="198" text-anchor="middle" fill="#8b94a7" font-size="10">read from aggregator.walrus-testnet.walrus.space</text>
+
+    <line x1="340" y1="124" x2="378" y2="124" stroke="#7ad9bf" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#arrG)" />
+    <text x="358" y="116" text-anchor="middle" fill="#8b94a7" font-size="9">resolves to</text>
+  </svg>
+
+  <p class="legend">The contract never holds WAL. The proposer pays the publisher upfront for the body's storage; the contract stores 32 bytes plus the vote-side state.</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- Section 2: voting                                             -->
+<!-- ============================================================ -->
+<section class="acc-section" data-section-id="s02-vote">
+  <h2><span class="badge">Section 2</span> Token-weighted voting</h2>
+
+  <p>One external function, six guards, one tally update.</p>
+
+  <svg viewBox="0 0 700 280" role="img" aria-label="vote flow with guard order">
+    <rect x="20" y="20" width="660" height="40" rx="8" fill="#1f242d" stroke="#79b8ff" />
+    <text x="40" y="44" fill="#79b8ff" font-size="12" font-weight="600">vote(uint256 id, bool support)</text>
+
+    <rect x="20" y="80" width="200" height="180" rx="8" fill="#1f242d" stroke="#e6c07b" />
+    <text x="120" y="106" text-anchor="middle" fill="#e6c07b" font-size="12" font-weight="600">guards (in order)</text>
+    <text x="120" y="130" text-anchor="middle" fill="#d5d9e0" font-size="10">p.deadline != 0</text>
+    <text x="120" y="148" text-anchor="middle" fill="#d5d9e0" font-size="10">block.timestamp &lt; deadline</text>
+    <text x="120" y="166" text-anchor="middle" fill="#d5d9e0" font-size="10">!hasVoted[id][msg.sender]</text>
+    <text x="120" y="184" text-anchor="middle" fill="#d5d9e0" font-size="10">weight &gt; 0</text>
+    <text x="120" y="202" text-anchor="middle" fill="#d5d9e0" font-size="10">weight &lt;= uint128.max</text>
+    <text x="120" y="232" text-anchor="middle" fill="#8b94a7" font-size="10">any revert → tally untouched</text>
+
+    <rect x="240" y="80" width="200" height="180" rx="8" fill="#1f242d" stroke="#79b8ff" />
+    <text x="340" y="106" text-anchor="middle" fill="#79b8ff" font-size="12" font-weight="600">read weight</text>
+    <text x="340" y="138" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">voteToken.balanceOf</text>
+    <text x="340" y="156" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">(msg.sender)</text>
+    <text x="340" y="190" text-anchor="middle" fill="#e08585" font-size="11">⚠ live read</text>
+    <text x="340" y="210" text-anchor="middle" fill="#8b94a7" font-size="10">— flash-loanable</text>
+    <text x="340" y="226" text-anchor="middle" fill="#8b94a7" font-size="10">  see Section 4</text>
+
+    <rect x="460" y="80" width="220" height="180" rx="8" fill="#1f242d" stroke="#6dd56d" />
+    <text x="570" y="106" text-anchor="middle" fill="#6dd56d" font-size="12" font-weight="600">commit</text>
+    <text x="570" y="136" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">hasVoted[id][s] = true</text>
+    <text x="570" y="158" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">p.yes += weight   (if yes)</text>
+    <text x="570" y="176" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">p.no  += weight   (if no)</text>
+    <text x="570" y="204" text-anchor="middle" fill="#d5d9e0" font-size="11" font-family="ui-monospace, monospace">emit Voted(...)</text>
+    <text x="570" y="232" text-anchor="middle" fill="#8b94a7" font-size="10">hasVoted set BEFORE tally update (CEI)</text>
+  </svg>
+
+  <p class="legend">Guards before reads, reads before writes, writes before emits. The order is the safe ordering even though the cheatcode tests don't reenter — keeping the discipline costs nothing.</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- Section 3: tally view                                         -->
+<!-- ============================================================ -->
+<section class="acc-section" data-section-id="s03-tally">
+  <h2><span class="badge">Section 3</span> The tally view</h2>
+
+  <p>Four return values. One short-circuit. Indexers and UIs poll this; make it clean.</p>
+
+  <svg viewBox="0 0 700 240" role="img" aria-label="tally state matrix">
+    <rect x="20" y="20" width="660" height="40" rx="8" fill="#1f242d" stroke="#79b8ff" />
+    <text x="40" y="44" fill="#79b8ff" font-size="12" font-weight="600">tally(id) → (yes, no, passed, closed)</text>
+
+    <rect x="20" y="80" width="160" height="140" rx="8" fill="#1f242d" stroke="#e6c07b" />
+    <text x="100" y="106" text-anchor="middle" fill="#e6c07b" font-size="12" font-weight="600">open</text>
+    <text x="100" y="132" text-anchor="middle" fill="#d5d9e0" font-size="11">closed = false</text>
+    <text x="100" y="152" text-anchor="middle" fill="#d5d9e0" font-size="11">passed = false</text>
+    <text x="100" y="180" text-anchor="middle" fill="#8b94a7" font-size="10">"we don't know yet"</text>
+    <text x="100" y="200" text-anchor="middle" fill="#8b94a7" font-size="10">— short-circuits out</text>
+
+    <rect x="200" y="80" width="160" height="140" rx="8" fill="#1f242d" stroke="#6dd56d" />
+    <text x="280" y="106" text-anchor="middle" fill="#6dd56d" font-size="12" font-weight="600">closed + passed</text>
+    <text x="280" y="132" text-anchor="middle" fill="#d5d9e0" font-size="11">closed = true</text>
+    <text x="280" y="152" text-anchor="middle" fill="#d5d9e0" font-size="11">passed = true</text>
+    <text x="280" y="180" text-anchor="middle" fill="#8b94a7" font-size="10">block.timestamp ≥ deadline</text>
+    <text x="280" y="200" text-anchor="middle" fill="#8b94a7" font-size="10">AND yes &gt; no</text>
+
+    <rect x="380" y="80" width="160" height="140" rx="8" fill="#1f242d" stroke="#e08585" />
+    <text x="460" y="106" text-anchor="middle" fill="#e08585" font-size="12" font-weight="600">closed + failed</text>
+    <text x="460" y="132" text-anchor="middle" fill="#d5d9e0" font-size="11">closed = true</text>
+    <text x="460" y="152" text-anchor="middle" fill="#d5d9e0" font-size="11">passed = false</text>
+    <text x="460" y="180" text-anchor="middle" fill="#8b94a7" font-size="10">block.timestamp ≥ deadline</text>
+    <text x="460" y="200" text-anchor="middle" fill="#8b94a7" font-size="10">AND yes ≤ no</text>
+
+    <rect x="560" y="80" width="120" height="140" rx="8" fill="#1f242d" stroke="#e08585" />
+    <text x="620" y="106" text-anchor="middle" fill="#e08585" font-size="12" font-weight="600">unknown</text>
+    <text x="620" y="132" text-anchor="middle" fill="#d5d9e0" font-size="11">reverts</text>
+    <text x="620" y="160" text-anchor="middle" fill="#8b94a7" font-size="10">p.deadline == 0</text>
+    <text x="620" y="180" text-anchor="middle" fill="#8b94a7" font-size="10">"unknown</text>
+    <text x="620" y="194" text-anchor="middle" fill="#8b94a7" font-size="10">proposal"</text>
+  </svg>
+
+  <p class="legend"><code>passed = closed && yes &gt; no</code> — the short-circuit makes "voting still open" the cheap path AND the canonical reading of the intent.</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- Section 4: flash-loan warning                                 -->
+<!-- ============================================================ -->
+<section class="acc-section" data-section-id="s04-flash-loan-warning">
+  <h2><span class="badge">Section 4</span> The flash-loan warning + the production fix</h2>
+
+  <div class="warn-banner">⚠ Showcase-only voting surface. Production deployments MUST replace the live <code>balanceOf</code> read with a past-balance snapshot — see below.</div>
+
+  <h3>The attack — what the live <code>balanceOf</code> read enables</h3>
+  <svg viewBox="0 0 700 220" role="img" aria-label="flash-loan vote-override attack">
+    <rect x="20" y="20" width="660" height="40" rx="8" fill="#1f242d" stroke="#e08585" />
+    <text x="350" y="44" text-anchor="middle" fill="#e08585" font-size="13" font-weight="600">flash-loan attack — single transaction</text>
+
+    <rect x="20" y="80" width="155" height="120" rx="8" fill="#1f242d" stroke="#2a313c" />
+    <text x="97" y="106" text-anchor="middle" fill="#79b8ff" font-size="11" font-weight="600">1. borrow</text>
+    <text x="97" y="130" text-anchor="middle" fill="#d5d9e0" font-size="10">Aave.flashLoan</text>
+    <text x="97" y="148" text-anchor="middle" fill="#d5d9e0" font-size="10">10M voteTokens</text>
+    <text x="97" y="172" text-anchor="middle" fill="#8b94a7" font-size="10">a few wei fee</text>
+
+    <rect x="185" y="80" width="155" height="120" rx="8" fill="#1f242d" stroke="#e08585" />
+    <text x="262" y="106" text-anchor="middle" fill="#e08585" font-size="11" font-weight="600">2. vote</text>
+    <text x="262" y="130" text-anchor="middle" fill="#d5d9e0" font-size="10">gov.vote(id, true)</text>
+    <text x="262" y="150" text-anchor="middle" fill="#d5d9e0" font-size="10">weight = 10M</text>
+    <text x="262" y="172" text-anchor="middle" fill="#8b94a7" font-size="10">tally permanently skewed</text>
+
+    <rect x="350" y="80" width="155" height="120" rx="8" fill="#1f242d" stroke="#2a313c" />
+    <text x="427" y="106" text-anchor="middle" fill="#79b8ff" font-size="11" font-weight="600">3. repay</text>
+    <text x="427" y="130" text-anchor="middle" fill="#d5d9e0" font-size="10">return 10M + fee</text>
+    <text x="427" y="150" text-anchor="middle" fill="#d5d9e0" font-size="10">same tx, same block</text>
+    <text x="427" y="172" text-anchor="middle" fill="#8b94a7" font-size="10">flash-loan invariant satisfied</text>
+
+    <rect x="515" y="80" width="165" height="120" rx="8" fill="#1f242d" stroke="#e6c07b" />
+    <text x="597" y="106" text-anchor="middle" fill="#e6c07b" font-size="11" font-weight="600">4. result</text>
+    <text x="597" y="130" text-anchor="middle" fill="#d5d9e0" font-size="10">attacker pays cents</text>
+    <text x="597" y="148" text-anchor="middle" fill="#d5d9e0" font-size="10">controls vote outcome</text>
+    <text x="597" y="172" text-anchor="middle" fill="#8b94a7" font-size="10">held tokens for 1 block</text>
+  </svg>
+
+  <h3>The fix — one substitution</h3>
+  <pre><code>// Showcase (this contract)
+uint256 weight = voteToken.balanceOf(msg.sender);
+
+// Production (pair with ERC20Votes; add startBlock to Proposal)
+uint256 weight = IVotes(address(voteToken)).getPastVotes(msg.sender, p.startBlock);</code></pre>
+
+  <p class="legend">The snapshot block is in the past — there's no transaction the attacker can issue now that retroactively gives them tokens at block N. Past-balance reads are unforgeable by any present-time action.</p>
+
+  <h3>The equivalence gate</h3>
+  <svg viewBox="0 0 700 100" role="img" aria-label="forge test gate">
+    <rect x="20" y="20" width="660" height="60" rx="8" fill="#1f242d" stroke="#6dd56d" />
+    <text x="350" y="46" text-anchor="middle" fill="#6dd56d" font-size="13" font-weight="600">forge test — 12 tests across the Governance suite</text>
+    <text x="350" y="68" text-anchor="middle" fill="#d5d9e0" font-size="11">propose (4) · vote (4) · tally (4)</text>
+  </svg>
+  <p class="legend">Green here means the Walrus-integration shape is right. The flash-loan vulnerability is a deliberate property of the showcase, not a bug to fix in your implementation — but understand it before reusing the pattern.</p>
+</section>
+
+<!-- ACC_STATE -->
+
+<script>
+  function applyAccState(s) {
+    if (!s) return;
+    const revealed = new Set(s.revealed || []);
+    for (const sec of document.querySelectorAll('section.acc-section')) {
+      const id = sec.getAttribute('data-section-id');
+      sec.setAttribute('data-visible', revealed.has(id) ? 'true' : 'false');
+    }
+    const cur = (typeof s.cursor === 'number') ? s.cursor + 1 : 0;
+    const total = s.total_sections ?? 0;
+    const mode = s.mode ?? '?';
+    const progress = document.getElementById('acc-progress');
+    if (progress) progress.textContent = 'Section ' + cur + ' of ' + total + ' · output mode: ' + mode;
+  }
+  applyAccState(window.__ACC_STATE__);
+
+  (async function poll() {
+    let lastUpdate = window.__ACC_STATE__?.updated_at ?? '';
+    while (true) {
+      try {
+        const r = await fetch('./artifact-state.json?_=' + Date.now(), { cache: 'no-store' });
+        if (r.ok) {
+          const s = await r.json();
+          if (s.updated_at !== lastUpdate) {
+            lastUpdate = s.updated_at;
+            applyAccState(s);
+          }
+        }
+      } catch (e) {
+        /* swallow */
+      }
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+  })();
+</script>
+
+</body>
+</html>

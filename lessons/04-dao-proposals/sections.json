@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "sections": [
+    {
+      "id": "s01-storage-and-propose",
+      "title": "Proposal storage + the propose path",
+      "body_md": "sections/01-storage-and-propose.md",
+      "key_moment": "`uint256 id = ++lastProposalId` does the sequential-id assignment AND the storage write in one line — pre-increment is what gives proposal #1 the id `1` rather than `0`, which matters because the contract's existence check elsewhere is `p.deadline != 0`. Pre-incrementing also dodges the off-by-one bug where the FIRST proposal would otherwise be indistinguishable from a never-touched slot.",
+      "expected_files": ["src/Governance.sol"],
+      "artifact_section_id": "s01-storage-and-propose"
+    },
+    {
+      "id": "s02-vote",
+      "title": "Token-weighted voting",
+      "body_md": "sections/02-vote.md",
+      "key_moment": "`uint256 weight = voteToken.balanceOf(msg.sender)` is the showcase's load-bearing simplification AND its load-bearing security hazard. A live `balanceOf` read makes flash loans a vote-override primitive: borrow tokens → vote → repay in one tx. The lesson holds the simple shape and Section 4 walks through the production fix (ERC20Votes + getPastVotes).",
+      "expected_files": ["src/Governance.sol"],
+      "artifact_section_id": "s02-vote"
+    },
+    {
+      "id": "s03-tally",
+      "title": "The tally view",
+      "body_md": "sections/03-tally.md",
+      "key_moment": "`passed = closed && yes > no` is the order that matters. `closed` first — if voting is still open you don't know who wins yet, so `passed` must be `false` regardless of the current tally. Reading the order the other way (`yes > no && closed`) is functionally identical but reads as if the question were 'is this winning?' rather than 'has this won?'. Choose the encoding that mirrors how the human reading the call thinks about the answer.",
+      "expected_files": ["src/Governance.sol"],
+      "artifact_section_id": "s03-tally"
+    },
+    {
+      "id": "s04-flash-loan-warning",
+      "title": "The flash-loan warning — and the production fix",
+      "body_md": "sections/04-flash-loan-warning.md",
+      "key_moment": "The path from showcase to production is one substitution: `voteToken.balanceOf(msg.sender)` → `IVotes(voteToken).getPastVotes(msg.sender, p.startBlock)`. A past-balance snapshot is unforgeable by a flash loan because the snapshot block is in the past — there is no transaction the attacker can issue that retroactively gives them tokens at block N. Pair this contract with an `ERC20Votes`-shaped token and store the snapshot block in the Proposal struct.",
+      "expected_files": ["src/Governance.sol"],
+      "artifact_section_id": "s04-flash-loan-warning"
+    }
+  ],
+  "final_verification": {
+    "mode": "test-suite",
+    "command": "forge test"
+  }
+}
