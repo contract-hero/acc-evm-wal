@@ -24,6 +24,10 @@
   }
   function apply(theme) {
     root.setAttribute("data-theme", theme);
+    // Keep the toggle's pressed-state in sync for assistive tech (pressed =
+    // dark active). Guarded: on first paint the <button> isn't parsed yet.
+    const btn = document.querySelector(".theme-toggle");
+    if (btn) btn.setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
   }
 
   // Resolve the active theme on first paint — script is in <head> before
@@ -39,6 +43,8 @@
   document.addEventListener("DOMContentLoaded", function () {
     const btn = document.querySelector(".theme-toggle");
     if (!btn) return;
+    // Reflect the already-applied (pre-paint) theme now that the button exists.
+    btn.setAttribute("aria-pressed", root.getAttribute("data-theme") === "dark" ? "true" : "false");
     btn.addEventListener("click", function () {
       const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
       apply(next);

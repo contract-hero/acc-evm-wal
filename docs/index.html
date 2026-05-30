@@ -49,7 +49,7 @@
           Six lessons that turn the <a href="https://mystenlabs.github.io/evm-sui/walrus.html">MystenLabs/evm-sui</a> showcases
           into hands-on builds. ACC clones a reference Foundry or pnpm workspace, walks you section-by-section through the
           Solidity and TypeScript, and gates every step on the test suite. By the end you've shipped an on-chain blob anchor,
-          an ENS-gated resolver, a DAO whose proposal bodies live on Walrus, and a 10 000-token quilted ERC-721 — five
+          an ENS-gated resolver, a DAO whose proposal bodies live on Walrus, and a 10 000-token quilted ERC-721 — six
           reference apps, 75 passing tests.
         </p>
         <div class="cta-row">
@@ -64,7 +64,8 @@
       <div class="wrap">
         <h2>Lessons</h2>
         <p class="section-lede">
-          Each lesson is a runnable reference app — Foundry or pnpm — plus four section prompts that walk you through the
+          Each lesson is a runnable reference app — Foundry or pnpm — plus a short ordered sequence of section prompts
+          (three to four) that walk you through the
           load-bearing pieces. Section bodies are mode-agnostic: in <em>learning</em> mode the conductor drops a TODO at the
           key spot, in <em>explanatory</em> mode it implements + walks through. Every lesson ends green or it doesn't end.
         </p>
@@ -241,7 +242,7 @@
             <line x1="370" y1="160" x2="370" y2="180" class="connector" marker-end="url(#arrow)"/>
 
             <rect x="160" y="184" width="420" height="76" rx="8" class="box-accent"/>
-            <text x="370" y="208" font-size="13" font-weight="600" class="t-accent">Conductor walks the 4-section sequence</text>
+            <text x="370" y="208" font-size="13" font-weight="600" class="t-accent">Conductor walks the section sequence</text>
             <text x="370" y="228" font-size="11" class="t-soft">advance HTML artifact · drop TODO (learning) or implement (explanatory)</text>
             <text x="370" y="246" font-size="11" class="t-soft">verifySection gates each step on `forge test` or `pnpm vitest run`</text>
 
@@ -274,7 +275,7 @@
           <div class="n">1</div>
           <div>
             <h3>Install the framework + this course</h3>
-            <p>From any Claude Code session. The course requires <code>agentic-community-college</code> ≥ <code>0.2.0</code>.</p>
+            <p>From any Claude Code session. This course runs on the <code>agentic-community-college</code> framework plugin — install it first, then the course.</p>
             <pre><code>/plugin marketplace add contract-hero/plugin-marketplace
 /plugin install agentic-community-college@contract-hero
 /plugin install acc-evm-wal@contract-hero</code></pre>
