@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 05 · Verifiable Manifest Client — acc-evm-wal</title>
+  <meta name="description" content="Build the off-chain side of the WalrusResolver pattern: an ENS name in, a typed JSON manifest out. One eth_call, one HTTP GET, no IPNS round-trip. Four sections, 15 vitest assertions, fully offline-runnable.">
+  <link rel="stylesheet" href="style.css">
+  <script src="theme.js"></script>
+</head>
+<body>
+  <header class="site">
+    <div class="wrap-wide">
+      <a class="brand" href="./" aria-label="acc-evm-wal home">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+          <rect x="2" y="2" width="28" height="28" rx="6" fill="#0f4c75"/>
+          <path d="M16 6 C 11 11, 11 18, 16 25 C 21 18, 21 11, 16 6 Z" fill="#4da2ff" fill-opacity="0.95"/>
+          <circle cx="16" cy="16" r="2.2" fill="#fff"/>
+        </svg>
+        <span>acc-evm-wal</span>
+      </a>
+      <nav class="site-nav" aria-label="Page contents">
+        <span class="crumbs"><a href="./">lessons</a> / <strong>05 · Verifiable Manifest</strong></span>
+        <a href="https://github.com/contract-hero/acc-evm-wal">GitHub</a>
+        <button class="theme-toggle" type="button" aria-label="Toggle color theme">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap">
+        <span class="eyebrow">Lesson 05 · TypeScript</span>
+        <h1>Resolve an ENS name to a typed JSON manifest in <em>one async call</em>.</h1>
+        <p class="lede">
+          The off-chain side of the WalrusResolver pattern. An ENS name in, a typed JSON manifest out — one
+          <code>eth_call</code> to the resolver, one HTTP GET to the aggregator, no IPNS round-trip in between. Generic
+          over the manifest shape so the same function serves Uniswap token lists, dApp configs, and DAO metadata.
+        </p>
+        <div class="meta">
+          <span><strong>Slug:</strong> <code>05-verifiable-manifest</code></span>
+          <span><strong>Stack:</strong> TS · viem · vitest</span>
+          <span><strong>Sections:</strong> 4</span>
+          <span><strong>Final gate:</strong> <code>pnpm vitest run</code> · 15 tests</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>What you'll write</h2>
+        <p class="section-lede">
+          Two modules: <code>src/encoding.ts</code> (pure helpers — <code>bytes32 → base64url</code>, <code>bytes8 →
+          ASCII</code>) and <code>src/manifest.ts</code> (the on-chain read + aggregator fetch + generic typed wrapper).
+          Dependency-injected fakes for the RPC + HTTP boundaries keep the suite fully offline.
+        </p>
+
+        <ul class="section-cards">
+          <li>
+            <div class="head"><span class="id">s01 · encoding</span></div>
+            <h3>Encoding helpers — bytes32 → base64url and bytes8 → ASCII</h3>
+            <p class="key">
+              <strong>base64url is NOT base64.</strong> The aggregator URL must use <code>-</code> instead of
+              <code>+</code>, <code>_</code> instead of <code>/</code>, and DROP the <code>=</code> padding.
+              <code>btoa()</code> produces standard base64; getting the substitutions wrong by one character returns 404
+              silently — the aggregator interprets the wrong slug as an unknown blob, not as a malformed request.
+            </p>
+          </li>
+
+          <li>
+            <div class="head"><span class="id">s02 · on-chain read</span></div>
+            <h3>The on-chain read — viem PublicClient + ABI</h3>
+            <p class="key">
+              <strong>Declaring <code>WALRUS_RESOLVER_ABI as const</code> is what makes viem type-check the return
+              shape.</strong> Without <code>as const</code>, the ABI is widened to <code>any[]</code> and
+              <code>readContract</code> returns <code>unknown</code> — the destructuring
+              <code>[blobId, , contentTypeRaw]</code> would silently lose type safety. The <code>as const</code> is
+              load-bearing TypeScript, not aesthetic style.
+            </p>
+          </li>
+
+          <li>
+            <div class="head"><span class="id">s03 · aggregator fetch</span></div>
+            <h3>Aggregator GET + content-type gating</h3>
+            <p class="key">
+              <strong>The <code>contentType.startsWith("app/json")</code> check before the fetch</strong> is what prevents
+              a misconfigured pointer (say, one that points at a PNG) from being parsed as JSON downstream. The
+              <code>bytes8</code> on-chain field is intentionally a shortcode grammar ("app/json", "text/md", "image/p"),
+              not a full MIME. The client mirrors the contract's design by accepting the shortcode form only.
+            </p>
+          </li>
+
+          <li>
+            <div class="head"><span class="id">s04 · generic + typed</span></div>
+            <h3>Generic <code>resolveManifest</code> + typed convenience wrapper</h3>
+            <p class="key">
+              <strong><code>resolveTokenList = (name, opts) =&gt; resolveManifest&lt;UniswapTokenList&gt;(name, opts)</code></strong>
+              — the curried specialization is one line and zero runtime overhead. The TYPE narrows at the call site; the
+              implementation stays generic over any JSON shape. Scales to any number of well-known manifest shapes without
+              forcing every caller to specify <code>&lt;T&gt;</code> inline.
+            </p>
+          </li>
+        </ul>
+
+        <div class="verify-block">
+          <h3>Verification</h3>
+          <p>Two vitest suites, 15 tests total. Run them inside the workspace:</p>
+          <pre><code>pnpm install
+pnpm vitest run</code></pre>
+          <p><strong>encoding.test.ts</strong> (7) covers the base64url substitutions and the null-trim grammar. <strong>manifest.test.ts</strong> (8) covers the full pipeline against injected fakes — unset pointer error, content-type rejection, non-2xx aggregator error, JSON parse error, and the typed-wrapper convenience.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>Sources</h2>
+        <p class="section-lede">Read the reference-app on GitHub, or follow the upstream walkthrough for the production trust-model discussion.</p>
+        <ul class="build-list build-list--stacked">
+          <li><strong>Reference-app:</strong> <a href="https://github.com/contract-hero/acc-evm-wal/tree/main/lessons/05-verifiable-manifest/reference-app">lessons/05-verifiable-manifest/reference-app/</a> — vitest workspace with DI seams for RPC + HTTP.</li>
+          <li><strong>Lesson sections:</strong> <a href="https://github.com/contract-hero/acc-evm-wal/tree/main/lessons/05-verifiable-manifest/sections">lessons/05-verifiable-manifest/sections/</a> — the four section prompts.</li>
+          <li><strong>evm-sui walkthrough:</strong> <a href="https://mystenlabs.github.io/evm-sui/05-verifiable-manifest.html">05-verifiable-manifest — verifiable token-list resolution</a> — the production-shape reference.</li>
+          <li><strong>viem:</strong> <a href="https://viem.sh">viem.sh</a> — for the <code>readContract</code> + ABI inference dance.</li>
+          <li><strong>@mysten/walrus:</strong> <a href="https://www.npmjs.com/package/@mysten/walrus">@mysten/walrus</a> — for trustless retrieval (recomputes the Walrus blob id over fetched bytes).</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site">
+    <div class="wrap-wide">
+      <div>
+        acc-evm-wal · course content for the
+        <a href="https://github.com/contract-hero/agentic-community-college">ACC</a> framework
+      </div>
+      <div>
+        <a href="./">All lessons</a> ·
+        <a href="https://github.com/contract-hero/acc-evm-wal">Source</a> ·
+        <a href="https://docs.wal.app">Walrus docs</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

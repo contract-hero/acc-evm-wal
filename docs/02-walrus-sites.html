@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 02 · Walrus Sites — acc-evm-wal</title>
+  <meta name="description" content="Port publish.sh to TypeScript: validate publish inputs, build the site-builder argv, parse the site_object_id, then construct the SuiNS link Move call. Four sections, vitest, fully offline-runnable.">
+  <link rel="stylesheet" href="style.css">
+  <script src="theme.js"></script>
+</head>
+<body>
+  <header class="site">
+    <div class="wrap-wide">
+      <a class="brand" href="./" aria-label="acc-evm-wal home">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+          <rect x="2" y="2" width="28" height="28" rx="6" fill="#0f4c75"/>
+          <path d="M16 6 C 11 11, 11 18, 16 25 C 21 18, 21 11, 16 6 Z" fill="#4da2ff" fill-opacity="0.95"/>
+          <circle cx="16" cy="16" r="2.2" fill="#fff"/>
+        </svg>
+        <span>acc-evm-wal</span>
+      </a>
+      <nav class="site-nav" aria-label="Page contents">
+        <span class="crumbs"><a href="./">lessons</a> / <strong>02 · Walrus Sites</strong></span>
+        <a href="https://github.com/contract-hero/acc-evm-wal">GitHub</a>
+        <button class="theme-toggle" type="button" aria-label="Toggle color theme">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap">
+        <span class="eyebrow">Lesson 02 · TypeScript</span>
+        <h1>Publish a static frontend as a Sui object <em>without leaving Claude Code</em>.</h1>
+        <p class="lede">
+          Port <code>publish.sh</code> to TypeScript: validate publish inputs, build the <code>site-builder</code> argv,
+          parse the <code>site_object_id</code> out of stdout, then construct the SuiNS link Move call that points a name at
+          the new site. Replaces the IPNS + Cloudflare gateway stack with one Sui object and one SuiNS transaction.
+        </p>
+        <div class="meta">
+          <span><strong>Slug:</strong> <code>02-walrus-sites</code></span>
+          <span><strong>Stack:</strong> TS · vitest · viem-free</span>
+          <span><strong>Sections:</strong> 4</span>
+          <span><strong>Final gate:</strong> <code>pnpm vitest run</code> · 23 tests</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>What you'll write</h2>
+        <p class="section-lede">
+          Two TypeScript modules — <code>src/publish.ts</code> (input validation, argv building, output parsing) and
+          <code>src/suins-link.ts</code> (the SuiNS Move call payload). Pure functions only; the vitest suite asserts on
+          return values without ever spawning a real CLI.
+        </p>
+
+        <ul class="section-cards">
+          <li>
+            <div class="head"><span class="id">s01 · validate inputs</span></div>
+            <h3>Validating publish inputs</h3>
+            <p class="key">
+              <strong>The site-name regex <code>^[A-Za-z0-9._-]{1,64}$</code> is a conservative-shell-safety hat.</strong>
+              <code>site-builder</code> itself accepts almost anything, but the name flows through bash wrappers, CI logs,
+              and (after linking) a SuiNS label — restricting it to filename-safe characters means no entry in the
+              pipeline has to defend against quoting, control chars, or pathological lengths.
+            </p>
+          </li>
+
+          <li>
+            <div class="head"><span class="id">s02 · build argv</span></div>
+            <h3>Building the <code>site-builder</code> argv</h3>
+            <p class="key">
+              <strong><code>--context &lt;network&gt;</code> is a GLOBAL flag on <code>site-builder</code></strong>, not a
+              subcommand flag — it must precede <code>publish</code> in the argv. The function returns the argv as a string
+              array (not a single shell-quoted string) so callers feed it to <code>execFile</code> / <code>spawn</code>,
+              which sidesteps shell injection on the site name.
+            </p>
+          </li>
+
+          <li>
+            <div class="head"><span class="id">s03 · parse output</span></div>
+            <h3>Parsing <code>site_object_id</code> from stdout</h3>
+            <p class="key">
+              <strong>Anchoring on the line shape</strong> (with the <code>m</code> regex flag) rather than greedy text
+              matching keeps the parser tolerant to upstream log changes — a future CLI version can rearrange the
+              surrounding text without breaking us as long as the line <code>site_object_id: 0x&lt;hex&gt;</code>
+              survives.
+            </p>
+          </li>
+
+          <li>
+            <div class="head"><span class="id">s04 · suins link</span></div>
+            <h3>Building the SuiNS link Move call</h3>
+            <p class="key">
+              <strong>One Sui Move call to <code>&lt;suins-pkg&gt;::controller::set_target_walrus_site</code></strong>,
+              taking the NameRegistration object id and the site object id (in that order). Returning the payload as data —
+              <code>{ target, args }</code> — instead of a built <code>Transaction</code> lets the test assert on PTB shape
+              without pulling in <code>@mysten/sui</code>, and lets the caller pick either <code>tx.moveCall(...)</code>
+              or <code>sui client call</code>.
+            </p>
+          </li>
+        </ul>
+
+        <div class="verify-block">
+          <h3>Verification</h3>
+          <p>Two vitest suites, 23 tests total. Run them inside the workspace:</p>
+          <pre><code>pnpm install
+pnpm vitest run</code></pre>
+          <p><strong>publish.test.ts</strong> (16) covers validation, argv layout, stdout parsing, and the MAX_EPOCHS=53 Walrus cap. <strong>suins-link.test.ts</strong> (7) pins the target string, arg order, network-keyed package id, and the package-id override path.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>Sources</h2>
+        <p class="section-lede">Read the reference-app on GitHub, or follow the design context on the upstream walkthrough.</p>
+        <ul class="build-list build-list--stacked">
+          <li><strong>Reference-app:</strong> <a href="https://github.com/contract-hero/acc-evm-wal/tree/main/lessons/02-walrus-sites/reference-app">lessons/02-walrus-sites/reference-app/</a> — vitest workspace, no live network or CLI required.</li>
+          <li><strong>Lesson sections:</strong> <a href="https://github.com/contract-hero/acc-evm-wal/tree/main/lessons/02-walrus-sites/sections">lessons/02-walrus-sites/sections/</a> — the four section prompts.</li>
+          <li><strong>evm-sui walkthrough:</strong> <a href="https://mystenlabs.github.io/evm-sui/02-walrus-sites.html">02-walrus-sites — Walrus Sites for dApp frontend hosting</a> — the production-shape source the lesson teaches toward.</li>
+          <li><strong>Walrus Sites docs:</strong> <a href="https://docs.wal.app/walrus-sites/tutorial-install.html">Installing site-builder</a>.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site">
+    <div class="wrap-wide">
+      <div>
+        acc-evm-wal · course content for the
+        <a href="https://github.com/contract-hero/agentic-community-college">ACC</a> framework
+      </div>
+      <div>
+        <a href="./">All lessons</a> ·
+        <a href="https://github.com/contract-hero/acc-evm-wal">Source</a> ·
+        <a href="https://docs.wal.app">Walrus docs</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

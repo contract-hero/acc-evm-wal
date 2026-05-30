@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 03 · WalrusResolver — acc-evm-wal</title>
+  <meta name="description" content="Build a Solidity contract that lets an ENS owner park a Walrus blob pointer on-chain. ENS-piggybacked auth, four sections, Foundry tests, an IPNS-grade pointer in 100 lines.">
+  <link rel="stylesheet" href="style.css">
+  <script src="theme.js"></script>
+</head>
+<body>
+  <header class="site">
+    <div class="wrap-wide">
+      <a class="brand" href="./" aria-label="acc-evm-wal home">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+          <rect x="2" y="2" width="28" height="28" rx="6" fill="#0f4c75"/>
+          <path d="M16 6 C 11 11, 11 18, 16 25 C 21 18, 21 11, 16 6 Z" fill="#4da2ff" fill-opacity="0.95"/>
+          <circle cx="16" cy="16" r="2.2" fill="#fff"/>
+        </svg>
+        <span>acc-evm-wal</span>
+      </a>
+      <nav class="site-nav" aria-label="Page contents">
+        <span class="crumbs"><a href="./">lessons</a> / <strong>03 · WalrusResolver</strong></span>
+        <a href="https://github.com/contract-hero/acc-evm-wal">GitHub</a>
+        <button class="theme-toggle" type="button" aria-label="Toggle color theme">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap">
+        <span class="eyebrow">Lesson 03 · Foundry</span>
+        <h1>Replace IPNS with <em>one <code>eth_call</code></em> against an ENS-gated resolver.</h1>
+        <p class="lede">
+          Build a Solidity contract that lets an ENS name's owner park a Walrus blob pointer on-chain. Authorization
+          piggybacks on the ENS registry's owner/operator model, the pointer carries both the content address and the
+          underlying Sui Blob object id (so a permissionless keeper can extend it), and reads cost one EVM
+          <code>eth_call</code>. Replaces a DHT round-trip with a single SLOAD.
+        </p>
+        <div class="meta">
+          <span><strong>Slug:</strong> <code>03-walrus-resolver</code></span>
+          <span><strong>Stack:</strong> Foundry · Solidity 0.8.24</span>
+          <span><strong>Sections:</strong> 4</span>
+          <span><strong>Final gate:</strong> <code>forge test</code> · 9 tests</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>What you'll write</h2>
+        <p class="section-lede">
+          One file: <code>src/WalrusResolver.sol</code>. The reference-app inlines a forge-std-free <code>Vm</code>
+          interface so the lesson runs offline. ENS is mocked locally; production points the resolver at the live ENS
+          registry on whatever chain you deploy to.
+        </p>
+
+        <ul class="section-cards">
+          <li>
+            <div class="head"><span class="id">s01 · storage + auth</span></div>
+            <h3>Storage + the ENS-piggybacked auth gate</h3>
+            <p class="key">
+              <strong><code>_requireAuthorized(node)</code> consults the EXTERNAL ENS registry</strong> —
+              <code>ens.owner(node)</code> and <code>ens.isApprovedForAll(...)</code>. That single line inherits ENSIP-1's
+              authorization model in its entirety: if the .eth name ever transfers, the new owner is automatically the
+              authority here too, with no separate claim step on this contract.
+            </p>
+          </li>
+
+          <li>
+            <div class="head"><span class="id">s02 · write path</span></div>
+            <h3>The write path — <code>setWalrusBlob</code></h3>
+            <p class="key">
+              <strong>Authorization is the FIRST line of <code>setWalrusBlob</code>.</strong> Every external mutator calls
+              <code>_requireAuthorized(node)</code> before touching storage. Centralising the check in an internal function
+              — instead of inlining the require — means a future mutator that forgets to call it stands out in a diff. A
+              guard rail by convention, but the cheapest way to make missing auth visible at code-review time.
+            </p>
+          </li>
+
+          <li>
+            <div class="head"><span class="id">s03 · clear path</span></div>
+            <h3>The clear path — <code>clearWalrusBlob</code></h3>
+            <p class="key">
+              <strong><code>delete _pointers[node]</code> + an explicit zero-valued event</strong>, instead of a self-call
+              to <code>setWalrusBlob(node, 0, 0, 0)</code>. The self-call would re-run the auth gate (cheap but redundant)
+              and would emit a "change" event that reads "set to zero" rather than "cleared". Indexers that surface history
+              care about the difference.
+            </p>
+          </li>
+
+          <li>
+            <div class="head"><span class="id">s04 · read + erc165</span></div>
+            <h3>The read path + ERC-165 declaration</h3>
+            <p class="key">
+              <strong><code>supportsInterface</code> claims ONLY <code>type(IERC165).interfaceId</code></strong> —
+              explicitly NOT the ENS resolver interface ids (<code>0x3b3b57de</code> for <code>addr</code>,
+              <code>0xbc1c58d1</code> for <code>contenthash</code>). Advertising those would create a category confusion:
+              a client that auto-detects "is this an ENS resolver?" would assume <code>addr()</code> and
+              <code>contenthash()</code> exist and start staticcalling functions that aren't here.
+            </p>
+          </li>
+        </ul>
+
+        <div class="verify-block">
+          <h3>Verification</h3>
+          <p>Nine Foundry tests gate the lesson — pointer round-trip, owner + operator auth paths, owner-transfer revoke, zero-owner rejection, the clear path, and the ERC-165 declaration.</p>
+          <pre><code>forge test</code></pre>
+          <p>The <code>test_setWalrusBlob_overwritePicksUpNewENSOwner</code> case is the punchline: after a simulated ENS ownership transfer the previous owner is immediately locked out, no claim step required.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>Sources</h2>
+        <p class="section-lede">Read the reference-app on GitHub, or jump to the upstream showcase for the keeper-bot context.</p>
+        <ul class="build-list build-list--stacked">
+          <li><strong>Reference-app:</strong> <a href="https://github.com/contract-hero/acc-evm-wal/tree/main/lessons/03-walrus-resolver/reference-app">lessons/03-walrus-resolver/reference-app/</a> — Foundry workspace with an inlined Vm interface, runs offline.</li>
+          <li><strong>Lesson sections:</strong> <a href="https://github.com/contract-hero/acc-evm-wal/tree/main/lessons/03-walrus-resolver/sections">lessons/03-walrus-resolver/sections/</a> — the four section prompts.</li>
+          <li><strong>evm-sui walkthrough:</strong> <a href="https://mystenlabs.github.io/evm-sui/03-walrus-resolver.html">03-walrus-resolver — the IPNS replacement</a> — includes the TypeScript keeper that extends the underlying Sui Blob's epoch window.</li>
+          <li><strong>ENS:</strong> <a href="https://docs.ens.domains/resolvers/quickstart">ENS resolver quickstart</a>.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site">
+    <div class="wrap-wide">
+      <div>
+        acc-evm-wal · course content for the
+        <a href="https://github.com/contract-hero/agentic-community-college">ACC</a> framework
+      </div>
+      <div>
+        <a href="./">All lessons</a> ·
+        <a href="https://github.com/contract-hero/acc-evm-wal">Source</a> ·
+        <a href="https://docs.wal.app">Walrus docs</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

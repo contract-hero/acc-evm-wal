@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 01 · Walrus + Solidity Basics — acc-evm-wal</title>
+  <meta name="description" content="Anchor a Walrus blob ID per EVM address using a 50-line Solidity contract. Three sections, bytes32 storage, Foundry tests. The smallest possible on-chain Walrus pointer.">
+  <link rel="stylesheet" href="style.css">
+  <script src="theme.js"></script>
+</head>
+<body>
+  <header class="site">
+    <div class="wrap-wide">
+      <a class="brand" href="./" aria-label="acc-evm-wal home">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+          <rect x="2" y="2" width="28" height="28" rx="6" fill="#0f4c75"/>
+          <path d="M16 6 C 11 11, 11 18, 16 25 C 21 18, 21 11, 16 6 Z" fill="#4da2ff" fill-opacity="0.95"/>
+          <circle cx="16" cy="16" r="2.2" fill="#fff"/>
+        </svg>
+        <span>acc-evm-wal</span>
+      </a>
+      <nav class="site-nav" aria-label="Page contents">
+        <span class="crumbs"><a href="./">lessons</a> / <strong>01 · Walrus + Solidity Basics</strong></span>
+        <a href="https://github.com/contract-hero/acc-evm-wal">GitHub</a>
+        <button class="theme-toggle" type="button" aria-label="Toggle color theme">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap">
+        <span class="eyebrow">Lesson 01 · Foundry</span>
+        <h1>Anchor a Walrus blob ID <em>per EVM address</em>, in 50 lines of Solidity.</h1>
+        <p class="lede">
+          Write a Solidity contract that stores one Walrus blob ID per caller, then verify it with a Foundry test suite. The
+          contract is small enough to fit on one screen; the goal is to nail the three load-bearing choices — <code>bytes32</code>
+          storage, <code>msg.sender</code>-keyed mapping, and a plain read path that hands off URL construction to the
+          off-chain client.
+        </p>
+        <div class="meta">
+          <span><strong>Slug:</strong> <code>01-walrus-solidity-basics</code></span>
+          <span><strong>Stack:</strong> Foundry · Solidity 0.8.20</span>
+          <span><strong>Sections:</strong> 3</span>
+          <span><strong>Final gate:</strong> <code>forge test</code> · 4 tests</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>What you'll write</h2>
+        <p class="section-lede">
+          Three sections, all editing one file: <code>src/WalrusAnchor.sol</code>. Each section's <em>key moment</em> is the
+          one decision that makes the rest of the section fall into place.
+        </p>
+
+        <ul class="section-cards">
+          <li>
+            <div class="head"><span class="id">s01 · anchor state</span></div>
+            <h3>Anchor state — the on-chain footprint</h3>
+            <p class="key">
+              <strong>Picking <code>bytes32</code> for the blob ID.</strong> Walrus blob IDs are exactly 32 bytes
+              (a BLAKE2b-256 hash of the content), so they slot into a single storage word — one SSTORE per anchor
+              regardless of underlying blob size. Using <code>string</code> or <code>bytes</code> would double the cost
+              and break the constant-gas property.
+            </p>
+          </li>
+
+          <li>
+            <div class="head"><span class="id">s02 · write path</span></div>
+            <h3>The write path — <code>anchor(bytes32 blobId)</code></h3>
+            <p class="key">
+              <strong>Using <code>msg.sender</code> as the mapping key</strong> (rather than taking an
+              <code>address owner</code> parameter). This makes the on-chain authentication implicit — the EVM has
+              already proven who the caller is by the time we reach this line, so we don't need any explicit
+              <code>require(msg.sender == owner)</code> check.
+            </p>
+          </li>
+
+          <li>
+            <div class="head"><span class="id">s03 · read path</span></div>
+            <h3>The read path — <code>blobOf(address)</code> and the equivalence gate</h3>
+            <p class="key">
+              <strong>The read path is a plain mapping lookup</strong> with no decoding, no aggregation, and no events —
+              the off-chain client uses the returned <code>bytes32</code> to build a URL like
+              <code>https://aggregator.walrus-testnet.walrus.space/v1/blobs/&lt;blobId-as-base64url&gt;</code> and fetches
+              the actual content from there. The contract's job ends at returning the pointer.
+            </p>
+          </li>
+        </ul>
+
+        <div class="verify-block">
+          <h3>Verification</h3>
+          <p>The reference-app's Foundry suite is the equivalence gate. Run it inside the workspace:</p>
+          <pre><code>forge test</code></pre>
+          <p>All <strong>4 tests</strong> should pass: storesBlobIdForCaller · emitsEvent · overwritesPrevious · blobOf returns zero for unknown.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>Sources</h2>
+        <p class="section-lede">Read the reference-app on GitHub, or jump to the parent showcase for the full design context.</p>
+        <ul class="build-list build-list--stacked">
+          <li><strong>Reference-app:</strong> <a href="https://github.com/contract-hero/acc-evm-wal/tree/main/lessons/01-walrus-solidity-basics/reference-app">lessons/01-walrus-solidity-basics/reference-app/</a> — a Foundry project with <code>WalrusAnchor.sol</code> + tests, forge-std-free so it runs offline.</li>
+          <li><strong>Lesson sections:</strong> <a href="https://github.com/contract-hero/acc-evm-wal/tree/main/lessons/01-walrus-solidity-basics/sections">lessons/01-walrus-solidity-basics/sections/</a> — the three section prompts the conductor walks you through.</li>
+          <li><strong>Parent showcase:</strong> <a href="https://mystenlabs.github.io/evm-sui/walrus.html">mystenlabs/evm-sui — Walrus integrations</a> — the index for all six EVM × Walrus reference apps.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site">
+    <div class="wrap-wide">
+      <div>
+        acc-evm-wal · course content for the
+        <a href="https://github.com/contract-hero/agentic-community-college">ACC</a> framework
+      </div>
+      <div>
+        <a href="./">All lessons</a> ·
+        <a href="https://github.com/contract-hero/acc-evm-wal">Source</a> ·
+        <a href="https://docs.wal.app">Walrus docs</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

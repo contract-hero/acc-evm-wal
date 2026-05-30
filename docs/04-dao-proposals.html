@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 04 · DAO Proposals — acc-evm-wal</title>
+  <meta name="description" content="Build a 100-line Governance contract whose proposal bodies live on Walrus and whose tallies live on-chain. Four sections including the flash-loan-vulnerability warning that separates the showcase from a production-safe pattern.">
+  <link rel="stylesheet" href="style.css">
+  <script src="theme.js"></script>
+</head>
+<body>
+  <header class="site">
+    <div class="wrap-wide">
+      <a class="brand" href="./" aria-label="acc-evm-wal home">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+          <rect x="2" y="2" width="28" height="28" rx="6" fill="#0f4c75"/>
+          <path d="M16 6 C 11 11, 11 18, 16 25 C 21 18, 21 11, 16 6 Z" fill="#4da2ff" fill-opacity="0.95"/>
+          <circle cx="16" cy="16" r="2.2" fill="#fff"/>
+        </svg>
+        <span>acc-evm-wal</span>
+      </a>
+      <nav class="site-nav" aria-label="Page contents">
+        <span class="crumbs"><a href="./">lessons</a> / <strong>04 · DAO Proposals</strong></span>
+        <a href="https://github.com/contract-hero/acc-evm-wal">GitHub</a>
+        <button class="theme-toggle" type="button" aria-label="Toggle color theme">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap">
+        <span class="eyebrow">Lesson 04 · Foundry</span>
+        <h1>Move the proposal body off the pinning vendor and onto <em>Walrus</em>.</h1>
+        <p class="lede">
+          Build a Governance contract whose on-chain state is just <code>(proposer, blobId, deadline, yes, no)</code> per
+          proposal. The proposer pays Walrus for the body upfront; voters read the markdown from the public aggregator and
+          cast a token-weighted yes/no on chain. Section 4 ships the flash-loan-vulnerability warning that separates the
+          showcase shape from a production-safe pattern.
+        </p>
+        <div class="meta">
+          <span><strong>Slug:</strong> <code>04-dao-proposals</code></span>
+          <span><strong>Stack:</strong> Foundry · Solidity 0.8.24 · OZ-free (inlined IERC20)</span>
+          <span><strong>Sections:</strong> 4</span>
+          <span><strong>Final gate:</strong> <code>forge test</code> · 12 tests</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>What you'll write</h2>
+        <p class="section-lede">
+          One file: <code>src/Governance.sol</code>. The reference-app inlines a minimal <code>IERC20</code> and uses a
+          tiny mock vote token in tests so the workspace stays OpenZeppelin-free.
+        </p>
+
+        <ul class="section-cards">
+          <li>
+            <div class="head"><span class="id">s01 · storage + propose</span></div>
+            <h3>Proposal storage + the propose path</h3>
+            <p class="key">
+              <strong><code>uint256 id = ++lastProposalId;</code></strong> does the sequential-id assignment AND the
+              storage write in one line — pre-increment is what gives proposal #1 the id <code>1</code> rather than
+              <code>0</code>, which matters because the existence check elsewhere is <code>p.deadline != 0</code>.
+              Pre-incrementing also dodges the off-by-one bug where the FIRST proposal would otherwise be
+              indistinguishable from a never-touched slot.
+            </p>
+          </li>
+
+          <li>
+            <div class="head"><span class="id">s02 · vote</span></div>
+            <h3>Token-weighted voting</h3>
+            <p class="key">
+              <strong><code>voteToken.balanceOf(msg.sender)</code> is the showcase's load-bearing simplification AND its
+              load-bearing security hazard.</strong> A live <code>balanceOf</code> read makes flash loans a vote-override
+              primitive. The lesson holds the simple shape; Section 4 walks through the production fix
+              (<code>ERC20Votes</code> + <code>getPastVotes</code>) and explains why <code>view</code> /
+              <code>STATICCALL</code> — not statement order — is what protects this call site from reentrancy.
+            </p>
+          </li>
+
+          <li>
+            <div class="head"><span class="id">s03 · tally</span></div>
+            <h3>The tally view</h3>
+            <p class="key">
+              <strong><code>passed = closed &amp;&amp; yes &gt; no</code> is the order that matters.</strong>
+              <code>closed</code> first — if voting is still open you don't know who wins yet, so <code>passed</code> must
+              be <code>false</code> regardless of the current tally. Choose the encoding that mirrors how the human
+              reading the call thinks about the answer.
+            </p>
+          </li>
+
+          <li>
+            <div class="head"><span class="id">s04 · flash-loan warning</span></div>
+            <h3>The flash-loan warning — and the production fix</h3>
+            <p class="key">
+              <strong>The path from showcase to production is one substitution:</strong>
+              <code>voteToken.balanceOf(msg.sender)</code> → <code>IVotes(voteToken).getPastVotes(msg.sender, p.startBlock)</code>.
+              A past-balance snapshot is unforgeable by a flash loan because the snapshot block is in the past — there is
+              no transaction the attacker can issue that retroactively gives them tokens at block N.
+            </p>
+          </li>
+        </ul>
+
+        <div class="verify-block">
+          <h3>Verification</h3>
+          <p>Twelve Foundry tests gate the lesson — propose validation, sequential id + state isolation, weighted vote tallies, double-vote rejection, post-deadline rejection, and the four tally state transitions (open · closed-passed · closed-failed · unknown reverts).</p>
+          <pre><code>forge test</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>Sources</h2>
+        <p class="section-lede">Read the reference-app on GitHub, or follow the upstream showcase for the TypeScript propose/tally CLIs.</p>
+        <ul class="build-list build-list--stacked">
+          <li><strong>Reference-app:</strong> <a href="https://github.com/contract-hero/acc-evm-wal/tree/main/lessons/04-dao-proposals/reference-app">lessons/04-dao-proposals/reference-app/</a> — Foundry workspace, OZ-free, runs offline.</li>
+          <li><strong>Lesson sections:</strong> <a href="https://github.com/contract-hero/acc-evm-wal/tree/main/lessons/04-dao-proposals/sections">lessons/04-dao-proposals/sections/</a> — the four section prompts.</li>
+          <li><strong>evm-sui walkthrough:</strong> <a href="https://mystenlabs.github.io/evm-sui/04-dao-proposals.html">04-dao-proposals — DAO governance on Walrus</a> — includes the TypeScript <code>propose</code> and <code>tally</code> CLIs that drive the contract end-to-end.</li>
+          <li><strong>OpenZeppelin Governor:</strong> <a href="https://docs.openzeppelin.com/contracts/5.x/governance">production governance patterns</a>.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site">
+    <div class="wrap-wide">
+      <div>
+        acc-evm-wal · course content for the
+        <a href="https://github.com/contract-hero/agentic-community-college">ACC</a> framework
+      </div>
+      <div>
+        <a href="./">All lessons</a> ·
+        <a href="https://github.com/contract-hero/acc-evm-wal">Source</a> ·
+        <a href="https://docs.wal.app">Walrus docs</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
