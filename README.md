@@ -1,41 +1,47 @@
 # acc-evm-wal
 
-A **content plugin** for the [Agentic Community College (ACC)](https://github.com/alilloig/agentic-community-college) framework. This repo ships a short course on Walrus decentralized storage basics and how to integrate it into a Solidity smart contract; the ACC plugin owns the runtime that actually drives the lessons.
+> Six Walrus × EVM lessons that run inside Claude Code. ACC seeds a Foundry or pnpm workspace, walks you section-by-section through the Solidity and TypeScript, and gates every step on the test suite — 75 passing tests across the course.
 
-## How it plugs in
+**👉 [Read the 2-minute overview](https://contract-hero.github.io/acc-evm-wal/)**
 
-`.claude-plugin/plugin.json` declares:
+## Install
 
-```json
-{
-  "name": "acc-evm-wal",
-  "accContent": {
-    "lessons": "./lessons/",
-    "probes": [ /* prerequisite checks for the lessons here */ ]
-  }
-}
+```text
+/plugin marketplace add contract-hero/plugin-marketplace
+/plugin install agentic-community-college@contract-hero
+/plugin install acc-evm-wal@contract-hero
+/acc-evm-wal:start
 ```
 
-When this plugin is enabled alongside `agentic-community-college`, ACC scans `~/.claude/plugins/installed_plugins.json` at startup, finds this manifest's `accContent` block, and aggregates every lesson under `lessons/<slug>/` into its catalog. Probes declared here resolve at runtime when a lesson lists them in its `prerequisites`.
+Foundry lessons (01, 03, 04, 06) need `forge` on PATH; TypeScript lessons (02, 05) need `pnpm`. ACC's preflight probes catch either and tell you what to install if missing.
 
-## What's inside
+## Lessons
 
+- **`01-walrus-solidity-basics`** — Anchor a Walrus blob ID per EVM address in a 50-line Solidity contract. Three sections, `bytes32` storage, Foundry tests.
+- **`02-walrus-sites`** — Port `publish.sh` to TypeScript: validate publish inputs, build the `site-builder` argv, parse the `site_object_id`, then construct the SuiNS link Move call. Replaces the IPNS + Cloudflare gateway stack with one Sui object and one SuiNS transaction.
+- **`03-walrus-resolver`** — An ENS-gated on-chain pointer (Solidity). Authorization piggybacks on the ENS registry's owner/operator model; reads cost one `eth_call`. Replaces a DHT round-trip with a single SLOAD.
+- **`04-dao-proposals`** — A DAO `Governance` contract whose proposal bodies live on Walrus and whose tallies live on-chain. Includes the flash-loan-vulnerability warning that separates the showcase shape from production-safe.
+- **`05-verifiable-manifest`** — The off-chain side of the WalrusResolver pattern (TypeScript). An ENS name in, a typed JSON manifest out: one `eth_call`, one HTTP GET, no IPNS round-trip.
+- **`06-quilted-collection`** — A 10 000-token ERC-721 whose metadata + images live in two Walrus Quilts instead of 10 000 IPFS pins. Deterministic `tokenURI`, owner-only aggregator-migration knob.
+
+## Links
+
+- **Landing page** — <https://contract-hero.github.io/acc-evm-wal/>
+- **Framework** — [`agentic-community-college`](https://github.com/contract-hero/agentic-community-college)
+- **Marketplace** — [`contract-hero/plugin-marketplace`](https://github.com/contract-hero/plugin-marketplace)
+- **Reference showcases** — [`MystenLabs/evm-sui`](https://github.com/MystenLabs/evm-sui) — the production-shape source the lessons teach toward
+- **Walrus docs** — <https://docs.wal.app>
+
+## For contributors
+
+If you're editing the course itself, see [`CLAUDE.md`](./CLAUDE.md) for the lesson schema, what NOT to add (no MCP/agent code — that's the framework's job), and the per-section authoring flow.
+
+```bash
+# Foundry lessons (01, 03, 04, 06)
+cd lessons/<slug>/reference-app && forge test
+
+# TypeScript lessons (02, 05)
+cd lessons/<slug>/reference-app && pnpm install && pnpm vitest run
 ```
-acc-evm-wal/
-├── .claude-plugin/plugin.json    name + accContent (lessons + probes), no executable bits
-├── README.md                     this file
-├── CLAUDE.md                     working notes for Claude when authoring lessons here
-└── lessons/                      one directory per lesson, each a hard copy of a reference app
-                                  plus its ordered section sequence, tests, and HTML artifact
-```
 
-## Authoring a new lesson
-
-Don't write lesson files by hand. From inside any ACC-enabled session, invoke the `lesson-creator` skill. Point it at this repo and a reference codebase, and it scaffolds the whole lesson directory.
-
-## Running a lesson
-
-1. Install (or enable) both this plugin **and** `agentic-community-college` in Claude Code.
-2. Run `/agentic-community-college:start` from any project directory.
-3. Pick a lesson by namespaced slug (e.g. `acc-evm-wal@<marketplace>/01-some-lesson`).
-4. ACC drives you through it — runs any prerequisite probes declared in this plugin, asks for learning vs explanatory mode, sets personalization, walks the section sequence.
+Don't write lesson files by hand — invoke ACC's `agentic-community-college:lesson-creator` skill instead. It scaffolds the whole `lessons/<slug>/` tree (manifest, sections, tests, artifact, reference-app) against a reference codebase.
