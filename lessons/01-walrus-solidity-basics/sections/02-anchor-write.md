@@ -35,4 +35,4 @@ The "overwrite previous" behavior is intentional — each address has one "curre
 
 ## Verification
 
-`forge build` should still compile clean. `forge test` will still report 0 tests until the next section, where we exercise both the write and the read paths.
+`forge build --skip test` should still compile clean. The full `forge test` suite runs in the next section — once `blobOf` exists, the vendored tests can finally compile and we exercise both the write and the read paths.

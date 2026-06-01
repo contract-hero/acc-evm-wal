@@ -9,7 +9,7 @@
 - [Foundry](https://getfoundry.sh) installed and on `PATH` (the conductor checks this for you via the `foundry-installed` probe).
 - Basic awareness of what content-addressed storage is — Walrus blob IDs are deterministic 32-byte hashes of the content, very similar in spirit to an IPFS CID.
 
-**Environment.** The lesson is fully offline-runnable. The reference app is a self-contained Foundry project that vendors a minimal cheatcode interface in the test file itself — no `forge install`, no network. `forge build && forge test` is the only thing the conductor will run in your workspace.
+**Environment.** The lesson is fully offline-runnable. The reference app is a self-contained Foundry project that vendors a minimal cheatcode interface in the test file itself — no `forge install`, no network. The only commands the conductor runs in your workspace are Foundry's: `forge build --skip test` while you're building the contract up section by section, then `forge test` for the final equivalence gate.
 
 **The deliverable.** When you reach the final section, `forge test` in your workspace passes the same four-test suite the reference implementation passes. The test suite is the equivalence gate — your code doesn't have to look identical to the reference, it just has to behave like it.
 

@@ -1,6 +1,6 @@
 # reference-app — `WalrusAnchor`
 
-The reference implementation of the lesson's deliverable. The ACC conductor seeds a copy of this directory into `~/.acc/workspaces/01-walrus-solidity-basics/` and runs `forge test` there as the equivalence gate.
+The reference implementation of the lesson's deliverable. The ACC conductor seeds a copy of this directory into `~/.acc/workspaces/01-walrus-solidity-basics/`, then overwrites `src/WalrusAnchor.sol` with the SPDX+pragma stub from `../starters/WalrusAnchor.sol` so the learner rebuilds the contract section by section. `forge test` over the vendored suite is the final equivalence gate.
 
 ```
 reference-app/
