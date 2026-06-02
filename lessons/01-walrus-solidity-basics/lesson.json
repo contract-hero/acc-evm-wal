@@ -8,9 +8,11 @@
   "prerequisites": ["foundry-installed"],
   "workspace": {
     "host": "reference-app",
-    "host_install_command": "forge build",
+    "host_install_command": "forge build --skip test",
     "verification_cwd": ".",
-    "files": []
+    "files": [
+      { "starter": "starters/WalrusAnchor.sol", "path": "src/WalrusAnchor.sol" }
+    ]
   },
   "artifact": {
     "template": "artifact/template.html",

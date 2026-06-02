@@ -1,6 +1,6 @@
 {
   "name": "acc-evm-wal",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "ACC content plugin teaching the basics of Walrus decentralized storage and how to integrate it with Solidity smart contracts.",
   "author": {
     "name": "Alvaro Lillo"

@@ -24,4 +24,4 @@ Using `string` would store the base64url representation (~44 chars) as a length-
 
 ## Verification
 
-Run `forge build` from your workspace. It should compile with no warnings. (`forge test` will still report 0 tests passing — that's expected; we haven't written the functions yet.)
+Run `forge build --skip test` from your workspace — that compiles just your contract under `src/`. It should compile with no warnings. (The lesson's test file already references `anchor` and `blobOf`, which you haven't written yet, so a plain `forge build` or `forge test` would *fail* to compile until the final section. `--skip test` sidesteps the test file while you build the state up.)
